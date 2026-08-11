@@ -42,7 +42,7 @@ export function useCartQuery(enabled: boolean) {
       return res.data.data;
     },
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 0,
   });
 }
 
@@ -55,6 +55,7 @@ export function useAddToCart() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['cart'], data);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 }
@@ -68,6 +69,7 @@ export function useUpdateCartItem() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['cart'], data);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 }
@@ -81,6 +83,7 @@ export function useRemoveCartItem() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['cart'], data);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 }
@@ -94,6 +97,7 @@ export function useClearCart() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['cart'], data);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 }
@@ -117,42 +121,44 @@ export function useCart() {
   // Guest Zustand store
   const guestStore = useCartStore();
 
-  if (isAuthenticated && cartQuery.data) {
+  // Logged-in Customer Cart (Always handle via backend)
+  if (isAuthenticated) {
     const apiCart = cartQuery.data;
 
-    // Transform backend cart items to unified format
-    const items = apiCart.items.map((item) => ({
-      product: {
-        id: item.productId,
-        name: item.name,
-        botanicalName: item.botanicalName || '',
-        categoryId: 'plant',
-        categoryName: 'Plant',
-        sunlight: 'Indirect Light' as const,
-        watering: 'When topsoil dries' as const,
-        careLevel: 'Beginner' as const,
-        description: '',
-        image: item.image,
-        price: item.price,
-        salePrice: item.salePrice || undefined,
-      } as PlantItem,
-      quantity: item.quantity,
-      isAvailable: item.isAvailable,
-      availabilityReason: item.availabilityReason,
-      effectivePrice: item.effectivePrice,
-      itemSubtotal: item.itemSubtotal,
-    }));
+    const items = apiCart
+      ? apiCart.items.map((item) => ({
+          product: {
+            id: item.productId,
+            name: item.name,
+            botanicalName: item.botanicalName || '',
+            categoryId: 'plant',
+            categoryName: 'Plant',
+            sunlight: 'Indirect Light' as const,
+            watering: 'When topsoil dries' as const,
+            careLevel: 'Beginner' as const,
+            description: '',
+            image: item.image,
+            price: item.price,
+            salePrice: item.salePrice || undefined,
+          } as PlantItem,
+          quantity: item.quantity,
+          isAvailable: item.isAvailable,
+          availabilityReason: item.availabilityReason,
+          effectivePrice: item.effectivePrice,
+          itemSubtotal: item.itemSubtotal,
+        }))
+      : [];
 
     return {
       isAuthenticated: true,
       items,
-      itemCount: apiCart.itemCount,
-      subtotal: apiCart.subtotal,
-      deliveryFee: apiCart.deliveryFee,
-      freeDeliveryThreshold: apiCart.freeDeliveryThreshold,
-      freeDeliveryRemaining: apiCart.freeDeliveryRemaining,
-      total: apiCart.total,
-      hasUnavailableItems: apiCart.hasUnavailableItems,
+      itemCount: apiCart?.itemCount ?? 0,
+      subtotal: apiCart?.subtotal ?? 0,
+      deliveryFee: apiCart?.deliveryFee ?? 0,
+      freeDeliveryThreshold: apiCart?.freeDeliveryThreshold ?? 999,
+      freeDeliveryRemaining: apiCart?.freeDeliveryRemaining ?? 999,
+      total: apiCart?.total ?? 0,
+      hasUnavailableItems: apiCart?.hasUnavailableItems ?? false,
       isLoading: cartQuery.isLoading,
       isMutating:
         addToCartMutation.isPending ||
@@ -186,7 +192,7 @@ export function useCart() {
     };
   }
 
-  // Fallback to Guest Store
+  // Fallback to Guest Store for unauthenticated visitors
   const subtotal = guestStore.getSubtotal();
   const deliveryFee = guestStore.getDeliveryFee();
   const total = guestStore.getTotal();

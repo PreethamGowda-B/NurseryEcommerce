@@ -61,7 +61,7 @@ export function useLogin() {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      await queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 }
@@ -99,7 +99,7 @@ export function useRegister() {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      await queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 }
