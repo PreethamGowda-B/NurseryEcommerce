@@ -16,6 +16,8 @@ router.get(
   validate(productQuerySchema),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+
       const options: ProductFilterOptions = {
         page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
         limit: req.query.limit ? parseInt(req.query.limit as string, 10) : undefined,
@@ -50,6 +52,8 @@ router.get(
   validate(productSlugParamSchema),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+      res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=600, stale-while-revalidate=1200');
+
       const slug = req.params.slug as string;
       const product = await ProductService.getPublicProductBySlug(slug);
 

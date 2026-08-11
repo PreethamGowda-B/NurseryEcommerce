@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
+import { INITIAL_CATEGORIES, INITIAL_PRODUCTS } from '../data/initialCatalogData';
 
 export interface ApiCategory {
   id: string;
@@ -70,29 +71,48 @@ export function useCategories() {
       const res = await api.get('/categories');
       return res.data.data;
     },
-    staleTime: 5 * 60 * 1000,
+    placeholderData: INITIAL_CATEGORIES,
+    staleTime: 10 * 60 * 1000,
   });
 }
 
 export function useProducts(params: ProductsQueryParams = {}) {
+  const isDefaultQuery =
+    !params.search &&
+    !params.category &&
+    !params.minPrice &&
+    !params.maxPrice &&
+    !params.sort &&
+    (!params.page || params.page === 1);
+
   return useQuery<ProductsApiResponse>({
     queryKey: ['products', params],
     queryFn: async () => {
       const res = await api.get('/products', { params });
       return res.data;
     },
-    staleTime: 60 * 1000,
+    placeholderData: isDefaultQuery
+      ? {
+          success: true,
+          data: INITIAL_PRODUCTS,
+          pagination: { page: 1, limit: 12, total: INITIAL_PRODUCTS.length, totalPages: 1 },
+        }
+      : undefined,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useProduct(slug: string) {
+  const fallbackProduct = INITIAL_PRODUCTS.find((p) => p.slug === slug);
+
   return useQuery<ApiProduct>({
     queryKey: ['product', slug],
     queryFn: async () => {
       const res = await api.get(`/products/${slug}`);
       return res.data.data;
     },
+    placeholderData: fallbackProduct,
     enabled: !!slug,
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 }
