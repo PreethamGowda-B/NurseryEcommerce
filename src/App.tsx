@@ -10,6 +10,7 @@ import { OrderSuccessPage } from './pages/OrderSuccessPage';
 import { AccountPage } from './pages/AccountPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { AdminPage } from './pages/AdminPage';
 
 export const App: React.FC = () => {
   return (
@@ -24,6 +25,8 @@ export const App: React.FC = () => {
         <Route path="/order-success" element={<OrderSuccessPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/*" element={<AccountPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/*" element={<AdminPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>

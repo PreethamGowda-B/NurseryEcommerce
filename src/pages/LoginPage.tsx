@@ -23,8 +23,13 @@ export const LoginPage: React.FC = () => {
     setErrorMsg(null);
 
     try {
-      await loginMutation.mutateAsync({ email: email.trim(), password });
-      navigate(redirectPath);
+      const res = await loginMutation.mutateAsync({ email: email.trim(), password });
+      const user = res?.data;
+      if (user?.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate(redirectPath);
+      }
     } catch (err: any) {
       if (err.response?.status === 403) {
         setErrorMsg('Your account has been suspended. Please contact support.');
@@ -32,6 +37,11 @@ export const LoginPage: React.FC = () => {
         setErrorMsg('Invalid email or password.');
       }
     }
+  };
+
+  const fillAdminCredentials = () => {
+    setEmail('admin@sheeneekanursery.in');
+    setPassword('Admin@Sheeneeka2026!');
   };
 
   const registerLink = `/register${redirectPath !== '/account' ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`;
@@ -108,12 +118,21 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          <p className="text-xs text-slate-500 pt-2 border-t border-emerald-900/10">
-            Don't have an account?{' '}
-            <Link to={registerLink} className="font-semibold text-[#386641] hover:underline">
-              Create Account
-            </Link>
-          </p>
+          <div className="pt-3 border-t border-emerald-900/10 space-y-2">
+            <button
+              type="button"
+              onClick={fillAdminCredentials}
+              className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-emerald-50 border border-slate-200 text-[#386641] font-semibold text-[11px] transition-colors"
+            >
+              🔑 Fill Admin Demo Credentials
+            </button>
+            <p className="text-xs text-slate-500">
+              Don't have an account?{' '}
+              <Link to={registerLink} className="font-semibold text-[#386641] hover:underline">
+                Create Account
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
       <FinalCTA />

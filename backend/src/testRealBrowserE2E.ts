@@ -198,14 +198,31 @@ async function runBrowserE2E() {
     console.log(`   📸 Screenshot 8 saved: 08_order_confirmation.png`);
     console.log(`   Current URL post-order: ${page.url()}`);
 
-    // 7. Check Customer Account Order History
-    console.log('\n7️⃣ Navigating to Account Dashboard (/account)...');
-    await page.goto('https://nursery-ecommerce.vercel.app/account', { waitUntil: 'networkidle2' });
+    // 8. Test Adding Products WHILE LOGGED IN
+    console.log('\n8️⃣ Testing Adding Products to Cart WHILE LOGGED IN...');
+    await page.goto('https://nursery-ecommerce.vercel.app', { waitUntil: 'networkidle2' });
     await new Promise((r) => setTimeout(r, 2000));
 
-    const screenshot9 = path.join(ARTIFACTS_DIR, '09_account_orders_history.png');
-    await page.screenshot({ path: screenshot9 });
-    console.log(`   📸 Screenshot 9 saved: 09_account_orders_history.png`);
+    const loggedInAddBtns = await page.$$('button');
+    let loggedInAdded = false;
+    for (const btn of loggedInAddBtns) {
+      const text = await page.evaluate((el) => el.textContent, btn);
+      if (text && text.toLowerCase().includes('add to cart')) {
+        await btn.click();
+        console.log(`   Clicked 'Add to Cart' button while logged in!`);
+        loggedInAdded = true;
+        await new Promise((r) => setTimeout(r, 1500));
+        break;
+      }
+    }
+
+    // Navigate to /cart to verify item added while logged in
+    await page.goto('https://nursery-ecommerce.vercel.app/cart', { waitUntil: 'networkidle2' });
+    await new Promise((r) => setTimeout(r, 3500));
+
+    const screenshot10 = path.join(ARTIFACTS_DIR, '10_logged_in_cart_added.png');
+    await page.screenshot({ path: screenshot10 });
+    console.log(`   📸 Screenshot 10 saved: 10_logged_in_cart_added.png`);
 
     console.log('\n✨ MANUAL REAL BROWSER E2E TEST COMPLETED SUCCESSFULLY!');
   } catch (err) {
