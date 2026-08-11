@@ -297,8 +297,10 @@ export class CartService {
     const cart = await this.getOrCreateCart(userId);
 
     for (const gItem of guestItems) {
-      const product = await prisma.product.findUnique({
-        where: { id: gItem.productId },
+      const product = await prisma.product.findFirst({
+        where: {
+          OR: [{ id: gItem.productId }, { slug: gItem.productId }],
+        },
       });
 
       // Skip invalid or unpublished products
@@ -310,7 +312,7 @@ export class CartService {
         where: {
           cartId_productId: {
             cartId: cart.id,
-            productId: gItem.productId,
+            productId: product.id,
           },
         },
       });
