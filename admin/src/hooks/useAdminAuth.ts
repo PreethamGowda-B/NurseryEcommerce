@@ -8,6 +8,7 @@ export interface AdminUser {
   phone?: string;
   role: string;
   status: string;
+  token?: string;
 }
 
 export function useAdminUser() {
@@ -35,6 +36,10 @@ export function useAdminLogin() {
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const res = await api.post('/auth/login', { email, password });
+      const user = res.data?.data;
+      if (user?.token) {
+        localStorage.setItem('auth_token', user.token);
+      }
       return res.data;
     },
     onSuccess: (data) => {

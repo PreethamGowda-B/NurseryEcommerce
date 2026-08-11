@@ -9,6 +9,7 @@ export interface UserProfile {
   phone?: string;
   role: string;
   status: string;
+  token?: string;
 }
 
 export function useUser() {
@@ -32,6 +33,10 @@ export function useLogin() {
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const res = await api.post('/auth/login', { email, password });
+      const user = res.data?.data;
+      if (user?.token) {
+        localStorage.setItem('auth_token', user.token);
+      }
       return res.data;
     },
     onSuccess: async (data) => {
@@ -50,7 +55,6 @@ export function useLogin() {
       if (guestItems.length > 0) {
         try {
           await api.post('/cart/merge', { items: guestItems });
-          // Clear guest local storage once merged into backend database
           useCartStore.getState().clearCart();
         } catch (err) {
           console.error('Failed to merge guest cart into backend:', err);
@@ -67,6 +71,10 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (payload: { name: string; email: string; phone?: string; password: string }) => {
       const res = await api.post('/auth/register', payload);
+      const user = res.data?.data;
+      if (user?.token) {
+        localStorage.setItem('auth_token', user.token);
+      }
       return res.data;
     },
     onSuccess: async (data) => {
