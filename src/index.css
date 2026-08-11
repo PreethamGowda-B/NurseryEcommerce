@@ -1,0 +1,224 @@
+/* ============================================================
+   GOOGLE FONTS — Premium Typography (must be first)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+  color-scheme: light;
+  --green-deep: #0f2d21;
+  --green-brand: #386641;
+  --green-mid: #2d6a4f;
+  --green-light: #52b788;
+  --cream: #faf9f6;
+  --cream-warm: #f0ede6;
+  --cream-strip: #f4f1ea;
+}
+
+html {
+  scroll-behavior: auto !important; /* Managed by GSAP ScrollTrigger */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--cream);
+  color: var(--green-deep);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   CUSTOM SCROLLBAR — Botanical Green
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream-strip); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #52b788, #386641);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--green-brand); }
+
+/* ============================================================
+   FONT UTILITIES
+   ============================================================ */
+.font-cinzel   { font-family: 'Cinzel', serif; }
+.font-playfair { font-family: 'Playfair Display', serif; }
+
+/* ============================================================
+   KEYFRAMES — Premium Micro-animations
+   ============================================================ */
+
+/* Staggered hero text reveal */
+@keyframes reveal-up {
+  0%   { opacity: 0; transform: translateY(32px); }
+  100% { opacity: 1; transform: translateY(0px); }
+}
+
+/* Floating leaf drift */
+@keyframes float-leaf {
+  0%   { transform: translateY(0px)   translateX(0px)   rotate(0deg)   scale(1);   opacity: 0; }
+  10%  { opacity: 0.7; }
+  50%  { transform: translateY(-120px) translateX(30px)  rotate(180deg) scale(0.85); opacity: 0.5; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-260px) translateX(-20px) rotate(360deg) scale(0.6); opacity: 0; }
+}
+
+/* CTA button shimmer sweep */
+@keyframes shimmer-sweep {
+  0%   { left: -80%; }
+  60%  { left: 140%; }
+  100% { left: 140%; }
+}
+
+/* Ambient ring pulse */
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1);    opacity: 0.18; }
+  50%        { transform: scale(1.04); opacity: 0.32; }
+}
+
+/* Soft breathe */
+@keyframes breathe {
+  0%, 100% { transform: scale(1);    opacity: 1;   }
+  50%        { transform: scale(1.015); opacity: 0.92; }
+}
+
+/* Chapter card slide-up */
+@keyframes chapter-slide {
+  0%   { opacity: 0; transform: translateY(40px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0px)  scale(1); }
+}
+
+/* Leaf sway */
+@keyframes leaf-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50%        { transform: rotate( 3deg); }
+}
+
+/* Particle drift */
+@keyframes particle-float {
+  0%   { transform: translateY(0)   rotate(0deg);   opacity: 0.6; }
+  100% { transform: translateY(-80px) rotate(360deg); opacity: 0; }
+}
+
+/* Horizontal scan line */
+@keyframes scan-line {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Gradient shift */
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ============================================================
+   ANIMATION UTILITY CLASSES
+   ============================================================ */
+.animate-reveal-up {
+  animation: reveal-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-reveal-up-d1 { animation: reveal-up 0.75s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-reveal-up-d2 { animation: reveal-up 0.75s 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-reveal-up-d3 { animation: reveal-up 0.75s 0.36s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-reveal-up-d4 { animation: reveal-up 0.75s 0.50s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-reveal-up-d5 { animation: reveal-up 0.75s 0.65s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.animate-pulse-ring  { animation: pulse-ring  4s ease-in-out infinite; }
+.animate-breathe     { animation: breathe     5s ease-in-out infinite; }
+.animate-leaf-sway   { animation: leaf-sway   3s ease-in-out infinite; }
+.animate-float-leaf  { animation: float-leaf 10s ease-in-out infinite; }
+
+/* ============================================================
+   PREMIUM SHADOW TOKENS
+   ============================================================ */
+.shadow-natural    { box-shadow: 0 2px  16px rgba(15, 45, 33, 0.08); }
+.shadow-natural-lg { box-shadow: 0 8px  40px rgba(15, 45, 33, 0.12); }
+.shadow-natural-xl { box-shadow: 0 20px 60px rgba(15, 45, 33, 0.16); }
+.shadow-glow-green { box-shadow: 0 0   20px rgba(56, 102, 65, 0.28); }
+
+/* ============================================================
+   SHIMMER BUTTON
+   ============================================================ */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer-sweep 3.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   GLASS CARD
+   ============================================================ */
+.glass-card {
+  background: rgba(250, 249, 246, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 102, 65, 0.12);
+  box-shadow: 0 8px 40px rgba(15, 45, 33, 0.12);
+}
+
+/* ============================================================
+   CINEMATIC CHAPTER OVERLAY
+   ============================================================ */
+.chapter-overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 45, 33, 0.92) 0%,
+    rgba(27, 67, 50, 0.85) 50%,
+    rgba(56, 102, 65, 0.80) 100%
+  );
+  backdrop-filter: blur(2px);
+}
+
+/* ============================================================
+   PREMIUM PLANT CARD HOVER
+   ============================================================ */
+.plant-card-hover {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s ease;
+}
+.plant-card-hover:hover {
+  transform: translateY(-6px) scale(1.012);
+  box-shadow: 0 16px 48px rgba(15, 45, 33, 0.16),
+              0 0 0 1px rgba(56, 102, 65, 0.12);
+}
+
+/* ============================================================
+   TEXT UTILITIES
+   ============================================================ */
+.text-glow-bright {
+  text-shadow: 0 2px 20px rgba(56, 102, 65, 0.15);
+}
+.text-glow-dark {
+  text-shadow: 0 2px 24px rgba(255, 255, 255, 0.25);
+}
+.bg-radial-vignette-bright {
+  background: radial-gradient(circle at center, transparent 40%, rgba(244, 241, 234, 0.6) 100%);
+}
+
+/* ============================================================
+   GRADIENT ANIMATED HEADLINE
+   ============================================================ */
+.gradient-headline {
+  background: linear-gradient(135deg, #0f2d21 0%, #386641 50%, #52b788 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 6s ease infinite;
+}
