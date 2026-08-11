@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from '../components/navigation/Navbar';
 import { FinalCTA } from '../components/footer/FinalCTA';
 import { Leaf, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
@@ -7,6 +7,10 @@ import { useLogin } from '../hooks/useAuth';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get('redirect') || '/account';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -19,7 +23,7 @@ export const LoginPage: React.FC = () => {
 
     try {
       await loginMutation.mutateAsync({ email, password });
-      navigate('/cart');
+      navigate(redirectPath);
     } catch (err: any) {
       if (err.response?.status === 403) {
         setErrorMsg('Your account has been suspended. Please contact support.');
@@ -28,6 +32,8 @@ export const LoginPage: React.FC = () => {
       }
     }
   };
+
+  const registerLink = `/register${redirectPath !== '/account' ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`;
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] pt-28">
@@ -95,7 +101,7 @@ export const LoginPage: React.FC = () => {
 
           <p className="text-xs text-slate-500 pt-2 border-t border-emerald-900/10">
             Don't have an account?{' '}
-            <Link to="/register" className="font-semibold text-[#386641] hover:underline">
+            <Link to={registerLink} className="font-semibold text-[#386641] hover:underline">
               Create Account
             </Link>
           </p>

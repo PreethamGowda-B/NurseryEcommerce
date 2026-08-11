@@ -1,11 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/navigation/Navbar';
 import { FinalCTA } from '../components/footer/FinalCTA';
 import { useCart } from '../hooks/useCart';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export const CartPage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     items,
     subtotal,
@@ -20,6 +21,14 @@ export const CartPage: React.FC = () => {
     removeFromCart,
     isAuthenticated,
   } = useCart();
+
+  const handleProceedToCheckout = () => {
+    if (isAuthenticated) {
+      navigate('/checkout');
+    } else {
+      navigate('/register?redirect=/checkout');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] pt-28">
@@ -39,7 +48,7 @@ export const CartPage: React.FC = () => {
 
           {!isAuthenticated && (
             <Link
-              to="/login"
+              to="/login?redirect=/cart"
               className="px-4 py-2 rounded-full bg-emerald-100/80 text-[#386641] text-xs font-semibold hover:bg-emerald-200 transition-colors"
             >
               Sign In to Save Cart Across Devices
@@ -191,7 +200,7 @@ export const CartPage: React.FC = () => {
               <div className="space-y-2">
                 <button
                   disabled={hasUnavailableItems || items.length === 0}
-                  onClick={() => alert('Order Checkout module will be integrated in Phase 7.')}
+                  onClick={handleProceedToCheckout}
                   className="w-full py-3.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-natural transition-all hover:scale-102 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Proceed to Checkout</span>

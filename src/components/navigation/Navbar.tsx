@@ -3,7 +3,7 @@ import { businessData } from '../../data/business';
 import { Phone, MessageSquare, Menu, X, Leaf, ShoppingBag, User as UserIcon, LogOut } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import { useUser, useLogout } from '../../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -11,6 +11,8 @@ export const Navbar: React.FC = () => {
   const { itemCount } = useCart();
   const { data: user } = useUser();
   const logoutMutation = useLogout();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,11 +22,29 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToSection = (id: string) => {
+  const handleNavClick = (id: string, path?: string) => {
     setIsMobileMenuOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+
+    if (path) {
+      navigate(path);
+      return;
+    }
+
+    if (location.pathname === '/') {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      navigate(`/?section=${id}`);
+    }
+  };
+
+  const handleBrandClick = () => {
+    if (location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/');
     }
   };
 
@@ -47,9 +67,9 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           
-          {/* Left Brand Logo matching Reference Image */}
+          {/* Left Brand Logo */}
           <div
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={handleBrandClick}
             className="flex items-center gap-3 cursor-pointer group"
           >
             <div className="w-10 h-10 rounded-full bg-emerald-100/80 border border-emerald-300/60 flex items-center justify-center text-[#386641] shadow-xs group-hover:scale-105 transition-transform">
@@ -66,41 +86,41 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* Center Navigation Links matching Reference Image */}
+          {/* Center Navigation Links */}
           <nav className="hidden md:flex items-center gap-8 text-xs font-semibold uppercase tracking-wider text-[#0f2d21]">
             <button
-              onClick={() => scrollToSection('plant-catalog')}
+              onClick={() => handleNavClick('plant-catalog')}
               className="hover:text-[#386641] transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#386641] hover:after:w-full after:transition-all"
             >
               Plants
             </button>
             <button
-              onClick={() => scrollToSection('why-sheeneeka')}
+              onClick={() => handleNavClick('why-sheeneeka')}
               className="hover:text-[#386641] transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#386641] hover:after:w-full after:transition-all"
             >
               About
             </button>
             <button
-              onClick={() => scrollToSection('nursery-gallery')}
+              onClick={() => handleNavClick('nursery-gallery')}
               className="hover:text-[#386641] transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#386641] hover:after:w-full after:transition-all"
             >
               Gallery
             </button>
             <button
-              onClick={() => scrollToSection('visit-us')}
+              onClick={() => handleNavClick('visit-us')}
               className="hover:text-[#386641] transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#386641] hover:after:w-full after:transition-all"
             >
               Visit Us
             </button>
             <button
-              onClick={() => scrollToSection('plant-catalog')}
+              onClick={() => handleNavClick('', '/shop')}
               className="hover:text-[#386641] transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#386641] hover:after:w-full after:transition-all"
             >
               Shop
             </button>
           </nav>
 
-          {/* Right Action Buttons matching Reference Image */}
+          {/* Right Action Buttons */}
           <div className="hidden lg:flex items-center gap-3">
             {/* Cart Button with Count Badge */}
             <Link
@@ -119,7 +139,12 @@ export const Navbar: React.FC = () => {
             {/* Account / Login */}
             {user ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[#0f2d21]">Hi, {user.name.split(' ')[0]}</span>
+                <Link
+                  to="/account"
+                  className="text-xs font-semibold text-[#0f2d21] hover:text-[#386641] transition-colors"
+                >
+                  Hi, {user.name.split(' ')[0]}
+                </Link>
                 <button
                   onClick={() => logoutMutation.mutate()}
                   className="p-2 rounded-full bg-slate-100 text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
@@ -159,7 +184,6 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
-            {/* Mobile Cart Icon */}
             <Link
               to="/cart"
               className="relative p-2 rounded-full bg-white border border-emerald-900/10 text-[#386641]"
@@ -196,19 +220,19 @@ export const Navbar: React.FC = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-[#faf9f6] border-b border-emerald-900/10 px-6 py-6 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
           <nav className="flex flex-col gap-4 text-sm font-semibold uppercase tracking-wider text-[#0f2d21]">
-            <button onClick={() => scrollToSection('plant-catalog')} className="text-left hover:text-[#386641]">
+            <button onClick={() => handleNavClick('plant-catalog')} className="text-left hover:text-[#386641]">
               Plants
             </button>
-            <button onClick={() => scrollToSection('why-sheeneeka')} className="text-left hover:text-[#386641]">
+            <button onClick={() => handleNavClick('why-sheeneeka')} className="text-left hover:text-[#386641]">
               About
             </button>
-            <button onClick={() => scrollToSection('nursery-gallery')} className="text-left hover:text-[#386641]">
+            <button onClick={() => handleNavClick('nursery-gallery')} className="text-left hover:text-[#386641]">
               Gallery
             </button>
-            <button onClick={() => scrollToSection('visit-us')} className="text-left hover:text-[#386641]">
+            <button onClick={() => handleNavClick('visit-us')} className="text-left hover:text-[#386641]">
               Visit Us
             </button>
-            <button onClick={() => scrollToSection('plant-catalog')} className="text-left hover:text-[#386641]">
+            <button onClick={() => handleNavClick('', '/shop')} className="text-left hover:text-[#386641]">
               Shop
             </button>
           </nav>

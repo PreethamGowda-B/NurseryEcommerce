@@ -35,6 +35,21 @@ export const StorePage: React.FC = () => {
     return () => ctx.revert();
   }, []);
 
+  // Handle cross-page navigation with ?section=id
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sectionId = params.get('section');
+    if (sectionId) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   // FPS Monitor for Dev mode
   useEffect(() => {
     if (!(import.meta as any).env?.DEV) return;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from '../components/navigation/Navbar';
 import { FinalCTA } from '../components/footer/FinalCTA';
 import { Leaf, Lock, Mail, User, Phone, ArrowRight, AlertCircle } from 'lucide-react';
@@ -7,6 +7,10 @@ import { useRegister } from '../hooks/useAuth';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get('redirect') || '/account';
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -26,7 +30,7 @@ export const RegisterPage: React.FC = () => {
 
     try {
       await registerMutation.mutateAsync({ name, email, phone, password });
-      navigate('/cart');
+      navigate(redirectPath);
     } catch (err: any) {
       if (err.response?.status === 409) {
         setErrorMsg('An account with this email address already exists.');
@@ -35,6 +39,8 @@ export const RegisterPage: React.FC = () => {
       }
     }
   };
+
+  const loginLink = `/login${redirectPath !== '/account' ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`;
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] pt-28">
@@ -131,7 +137,7 @@ export const RegisterPage: React.FC = () => {
 
           <p className="text-xs text-slate-500 pt-2 border-t border-emerald-900/10">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-[#386641] hover:underline">
+            <Link to={loginLink} className="font-semibold text-[#386641] hover:underline">
               Log In
             </Link>
           </p>
