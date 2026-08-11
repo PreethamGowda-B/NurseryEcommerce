@@ -60,6 +60,7 @@ export const createApp = (): Express => {
   app.use('/api', globalLimiter);
 
   // Routes
+  app.use('/', healthRouter);
   app.use('/api', healthRouter);
   app.use('/api', authRouter);
   app.use('/api', categoryRouter);

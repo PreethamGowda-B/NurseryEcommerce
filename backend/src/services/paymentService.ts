@@ -171,6 +171,20 @@ export class PaymentService {
         });
 
         if (!existingTx) {
+          const updatedCount = await tx.product.updateMany({
+            where: {
+              id: item.productId,
+              stockQuantity: { gte: item.quantity },
+            },
+            data: {
+              stockQuantity: { decrement: item.quantity },
+            },
+          });
+
+          if (updatedCount.count === 0) {
+            throw new BadRequestError(`Insufficient stock for product "${item.productNameSnapshot}"`);
+          }
+
           await txAny.inventoryTransaction.create({
             data: {
               orderId: order.id,
@@ -179,16 +193,6 @@ export class PaymentService {
               quantity: item.quantity,
             },
           });
-
-          // Decrement stock without going below 0
-          const product = await tx.product.findUnique({ where: { id: item.productId } });
-          if (product) {
-            const newStock = Math.max(0, product.stockQuantity - item.quantity);
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stockQuantity: newStock },
-            });
-          }
         }
       }
 
@@ -253,7 +257,7 @@ export class PaymentService {
         },
       });
 
-      // Idempotent Inventory Reservation
+      // Idempotent Inventory Reservation with Atomic Stock Check
       for (const item of order.items) {
         const existingTx = await txAny.inventoryTransaction.findFirst({
           where: {
@@ -264,6 +268,20 @@ export class PaymentService {
         });
 
         if (!existingTx) {
+          const updatedCount = await tx.product.updateMany({
+            where: {
+              id: item.productId,
+              stockQuantity: { gte: item.quantity },
+            },
+            data: {
+              stockQuantity: { decrement: item.quantity },
+            },
+          });
+
+          if (updatedCount.count === 0) {
+            throw new BadRequestError(`Insufficient stock for product "${item.productNameSnapshot}"`);
+          }
+
           await txAny.inventoryTransaction.create({
             data: {
               orderId: order.id,
@@ -272,15 +290,6 @@ export class PaymentService {
               quantity: item.quantity,
             },
           });
-
-          const product = await tx.product.findUnique({ where: { id: item.productId } });
-          if (product) {
-            const newStock = Math.max(0, product.stockQuantity - item.quantity);
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stockQuantity: newStock },
-            });
-          }
         }
       }
 
