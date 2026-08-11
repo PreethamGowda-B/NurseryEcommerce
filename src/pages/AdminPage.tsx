@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Navbar } from '../components/navigation/Navbar';
+import { FinalCTA } from '../components/footer/FinalCTA';
 import { useUser, useLogout } from '../hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
@@ -32,6 +34,9 @@ import {
   X,
   ChevronRight,
   SlidersHorizontal,
+  Sparkles,
+  Tag,
+  Boxes,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -72,7 +77,6 @@ export const AdminPage: React.FC = () => {
 
   // Modal States
   const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
   // New Product Form State
   const [newProdName, setNewProdName] = useState('');
@@ -86,7 +90,7 @@ export const AdminPage: React.FC = () => {
 
   const isAdmin = user?.role === 'ADMIN';
 
-  // 1. Fetch Dashboard Stats
+  // 1. Fetch Dashboard Stats (POLLS REAL-TIME EVERY 5 SECONDS)
   const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useQuery<DashboardStats>({
     queryKey: ['adminStats'],
     queryFn: async () => {
@@ -94,10 +98,10 @@ export const AdminPage: React.FC = () => {
       return res.data.data;
     },
     enabled: isAdmin,
-    staleTime: 10000,
+    refetchInterval: 5000, // Real-time 5s polling for new incoming orders
   });
 
-  // 2. Fetch Orders
+  // 2. Fetch Orders (POLLS REAL-TIME EVERY 5 SECONDS)
   const { data: ordersData, isLoading: ordersLoading, refetch: refetchOrders } = useQuery({
     queryKey: ['adminOrders', orderStatusFilter, orderSearch],
     queryFn: async () => {
@@ -109,7 +113,7 @@ export const AdminPage: React.FC = () => {
       return res.data.data;
     },
     enabled: isAdmin,
-    staleTime: 10000,
+    refetchInterval: 5000, // Real-time 5s polling for new incoming orders
   });
 
   // 3. Fetch Products
@@ -123,6 +127,7 @@ export const AdminPage: React.FC = () => {
       return res.data.data;
     },
     enabled: isAdmin,
+    refetchInterval: 5000,
   });
 
   // 4. Fetch Users
@@ -135,6 +140,7 @@ export const AdminPage: React.FC = () => {
       return res.data.data;
     },
     enabled: isAdmin,
+    refetchInterval: 10000,
   });
 
   // Order Status Update Mutation
@@ -142,7 +148,7 @@ export const AdminPage: React.FC = () => {
     mutationFn: async ({ orderNumber, status }: { orderNumber: string; status: string }) => {
       const res = await api.patch(`/admin/orders/${orderNumber}/status`, {
         status,
-        note: `Status updated to ${status} by super admin`,
+        note: `Status updated to ${status} by admin`,
       });
       return res.data;
     },
@@ -261,8 +267,8 @@ export const AdminPage: React.FC = () => {
 
   if (isUserLoading) {
     return (
-      <div className="min-h-screen bg-[#071610] text-emerald-100 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-emerald-400 font-semibold text-sm">
+      <div className="min-h-screen bg-[#faf9f6] pt-28 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-[#386641] font-semibold text-sm">
           <RefreshCw className="w-5 h-5 animate-spin" />
           <span>Verifying Super Admin Authorization...</span>
         </div>
@@ -272,188 +278,115 @@ export const AdminPage: React.FC = () => {
 
   if (!user || user.role !== 'ADMIN') {
     return (
-      <div className="min-h-screen bg-[#071610] text-[#e2f0db] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-[#0d261b] border border-emerald-800/40 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 rounded-full bg-amber-900/40 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
+      <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] pt-28">
+        <Navbar />
+        <div className="max-w-md mx-auto px-4 py-16 text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
             <ShieldAlert className="w-8 h-8" />
           </div>
           <div className="space-y-2">
-            <h1 className="font-cinzel text-2xl font-bold text-white">Super Admin Access Required</h1>
-            <p className="text-emerald-200/70 text-xs font-light leading-relaxed">
+            <h1 className="font-cinzel text-2xl font-bold">Super Admin Access Required</h1>
+            <p className="text-slate-500 text-xs font-light leading-relaxed">
               You must be logged in as an authorized Sheeneeka Nursery Super Administrator to access this management console.
             </p>
           </div>
-          <div className="p-4 rounded-2xl bg-[#081a12] border border-emerald-800/30 text-xs text-left space-y-2">
-            <p className="font-bold text-emerald-400">Super Admin Seed Credentials:</p>
-            <p className="font-mono text-emerald-200/90 select-all">Email: admin@sheeneekanursery.in</p>
-            <p className="font-mono text-emerald-200/90 select-all">Password: Admin@Sheeneeka2026!</p>
+          <div className="p-4 rounded-2xl bg-white border border-emerald-900/10 shadow-xs text-xs text-left space-y-2">
+            <p className="font-bold text-[#0f2d21]">Super Admin Seed Credentials:</p>
+            <p className="font-mono text-slate-600 select-all">Email: admin@sheeneekanursery.in</p>
+            <p className="font-mono text-slate-600 select-all">Password: Admin@Sheeneeka2026!</p>
           </div>
           <Link
             to="/login?redirect=/admin"
-            className="w-full py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-natural transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#386641] text-white text-xs font-semibold hover:bg-[#2d5234] transition-all shadow-natural"
           >
-            <span>Log In to Super Admin Console</span>
+            <span>Log In as Super Admin</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
+        <FinalCTA />
       </div>
     );
   }
 
-  const ordersList = ordersData?.orders || [];
-  const productsList = productsData?.data || [];
-  const usersList = usersData?.users || [];
+  // Correct data extraction from backend response
+  const ordersList: any[] = ordersData?.data || [];
+  const productsList: any[] = productsData?.data || [];
+  const usersList: any[] = usersData?.users || [];
 
   return (
-    <div className="min-h-screen bg-[#071610] text-[#e2f0db] flex flex-col lg:flex-row font-sans">
-      {/* SUPER ADMIN SIDEBAR */}
-      <aside className="w-full lg:w-72 bg-[#0b2117] border-r border-emerald-900/30 flex flex-col justify-between flex-shrink-0">
-        <div className="p-6 space-y-8">
-          {/* Logo & Portal Badge */}
+    <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] pt-24 font-sans">
+      <Navbar />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* SUPER ADMIN HEADER CARD (BOTANICAL THEME MATCHING STOREFRONT) */}
+        <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <Link to="/" className="flex items-center gap-2 text-white">
-              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
-                <Leaf className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 text-[#386641] text-[10px] font-bold uppercase tracking-widest">
+                <Sparkles className="w-3 h-3" />
+                <span>SUPER ADMIN OPERATIONS PORTAL</span>
               </div>
-              <div>
-                <span className="font-cinzel text-lg font-bold tracking-wide block leading-none">
-                  SHEENEEKA
-                </span>
-                <span className="text-[10px] font-mono tracking-widest text-emerald-400 uppercase">
-                  SUPER ADMIN PORTAL
-                </span>
+              <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Live Supabase PostgreSQL • Realtime 5s Sync</span>
               </div>
-            </Link>
+            </div>
+            <h1 className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
+              Sheeneeka Nursery Control Center
+            </h1>
+            <p className="text-slate-500 text-xs font-light">
+              Logged in as <strong className="text-[#386641] font-semibold">{user.name}</strong> ({user.email})
+            </p>
           </div>
 
-          {/* Nav Items */}
-          <nav className="space-y-1 text-xs font-medium">
+          {/* TAB NAVIGATION BAR */}
+          <div className="flex flex-wrap items-center gap-2 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`w-full px-4 py-3 rounded-2xl flex items-center justify-between transition-all ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
                 activeTab === 'overview'
-                  ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-semibold'
-                  : 'text-emerald-200/70 hover:bg-emerald-950/50 hover:text-white'
+                  ? 'bg-[#386641] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-[#0f2d21]'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Executive Overview</span>
-              </div>
-              <ChevronRight className="w-4 h-4 text-emerald-500/40" />
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Overview</span>
             </button>
 
             <button
               onClick={() => setActiveTab('orders')}
-              className={`w-full px-4 py-3 rounded-2xl flex items-center justify-between transition-all ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
                 activeTab === 'orders'
-                  ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-semibold'
-                  : 'text-emerald-200/70 hover:bg-emerald-950/50 hover:text-white'
+                  ? 'bg-[#386641] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-[#0f2d21]'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <ShoppingBag className="w-4 h-4" />
-                <span>Order Management</span>
-              </div>
-              {statsData?.orders.pending ? (
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-300 font-bold text-[10px]">
-                  {statsData.orders.pending}
-                </span>
-              ) : null}
+              <ShoppingBag className="w-4 h-4" />
+              <span>Orders ({ordersList.length})</span>
             </button>
 
             <button
               onClick={() => setActiveTab('products')}
-              className={`w-full px-4 py-3 rounded-2xl flex items-center justify-between transition-all ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
                 activeTab === 'products'
-                  ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-semibold'
-                  : 'text-emerald-200/70 hover:bg-emerald-950/50 hover:text-white'
+                  ? 'bg-[#386641] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-[#0f2d21]'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <Package className="w-4 h-4" />
-                <span>Plant Catalog & Stock</span>
-              </div>
-              <span className="text-[10px] text-emerald-400 font-mono">
-                {statsData?.totalProducts || 0}
-              </span>
+              <Package className="w-4 h-4" />
+              <span>Products ({productsList.length})</span>
             </button>
 
             <button
               onClick={() => setActiveTab('users')}
-              className={`w-full px-4 py-3 rounded-2xl flex items-center justify-between transition-all ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
                 activeTab === 'users'
-                  ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-semibold'
-                  : 'text-emerald-200/70 hover:bg-emerald-950/50 hover:text-white'
+                  ? 'bg-[#386641] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-[#0f2d21]'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <Users className="w-4 h-4" />
-                <span>Customer Accounts</span>
-              </div>
-            </button>
-          </nav>
-        </div>
-
-        {/* Admin Footer & Logout */}
-        <div className="p-6 border-t border-emerald-900/30 space-y-4">
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#081a12] border border-emerald-800/30">
-            <div className="w-8 h-8 rounded-full bg-emerald-700 text-white font-bold flex items-center justify-center text-xs">
-              SA
-            </div>
-            <div className="overflow-hidden text-xs">
-              <span className="font-semibold text-white block truncate">{user.name}</span>
-              <span className="text-[10px] text-emerald-400 block truncate">{user.email}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Link
-              to="/"
-              className="flex-1 py-2 px-3 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-800/40 text-emerald-300 text-xs font-semibold text-center transition-colors"
-            >
-              View Storefront
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-xl bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/40 transition-colors"
-              title="Log Out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* SUPER ADMIN MAIN CONTENT */}
-      <main className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8 bg-[#071610]">
-        {/* Top Operational Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-emerald-900/30">
-          <div>
-            <div className="flex items-center gap-2 text-xs text-emerald-400 font-mono">
-              <Database className="w-3.5 h-3.5" />
-              <span>Supabase PostgreSQL (Tokyo ap-northeast-1) • Live Connected</span>
-            </div>
-            <h1 className="font-cinzel text-2xl sm:text-3xl font-bold text-white mt-1">
-              {activeTab === 'overview' && 'Executive Management Overview'}
-              {activeTab === 'orders' && 'Customer Order Processing & Fulfillment'}
-              {activeTab === 'products' && 'Botanical Catalog & Inventory Control'}
-              {activeTab === 'users' && 'Customer Accounts & Access Management'}
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                refetchStats();
-                refetchOrders();
-                refetchProducts();
-                refetchUsers();
-              }}
-              className="px-4 py-2 rounded-xl bg-emerald-900/50 hover:bg-emerald-800/60 border border-emerald-700/40 text-emerald-200 text-xs font-semibold flex items-center gap-2 transition-all shadow-xs"
-            >
-              <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />
-              <span>Refresh Metrics</span>
+              <Users className="w-4 h-4" />
+              <span>Customers ({usersList.length})</span>
             </button>
           </div>
         </div>
@@ -463,155 +396,191 @@ export const AdminPage: React.FC = () => {
           <div className="space-y-8">
             {/* KPI Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-[#0b2117] border border-emerald-800/30 rounded-3xl p-6 space-y-3 shadow-xl">
-                <div className="flex items-center justify-between text-emerald-400">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-200/60">Total Paid Revenue</span>
-                  <DollarSign className="w-6 h-6 bg-emerald-900/60 p-1 rounded-xl" />
+              <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 shadow-natural space-y-2">
+                <div className="flex items-center justify-between text-[#386641]">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Paid Revenue</span>
+                  <DollarSign className="w-5 h-5 bg-emerald-100 p-1 rounded-full" />
                 </div>
-                <div className="font-cinzel text-3xl font-bold text-white">
+                <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
                   ₹{statsData?.revenue.paidRevenue.toLocaleString() || '0'}
                 </div>
-                <p className="text-xs text-amber-400/90 font-mono">
+                <p className="text-xs text-amber-700 font-medium">
                   + ₹{statsData?.revenue.codPendingAmount.toLocaleString() || '0'} Pending COD
                 </p>
               </div>
 
-              <div className="bg-[#0b2117] border border-emerald-800/30 rounded-3xl p-6 space-y-3 shadow-xl">
-                <div className="flex items-center justify-between text-blue-400">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-200/60">Total Customer Orders</span>
-                  <ShoppingBag className="w-6 h-6 bg-blue-900/60 p-1 rounded-xl" />
+              <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 shadow-natural space-y-2">
+                <div className="flex items-center justify-between text-blue-700">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Orders Placed</span>
+                  <ShoppingBag className="w-5 h-5 bg-blue-100 p-1 rounded-full" />
                 </div>
-                <div className="font-cinzel text-3xl font-bold text-white">
-                  {statsData?.orders.total || 0}
+                <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
+                  {statsData?.orders.total || ordersList.length}
                 </div>
-                <p className="text-xs text-emerald-400 font-mono">
-                  {statsData?.orders.pending || 0} Action Pending
+                <p className="text-xs text-emerald-700 font-medium">
+                  {statsData?.orders.pending || 0} Need Confirmation
                 </p>
               </div>
 
-              <div className="bg-[#0b2117] border border-emerald-800/30 rounded-3xl p-6 space-y-3 shadow-xl">
-                <div className="flex items-center justify-between text-emerald-400">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-200/60">Active Catalog</span>
-                  <Package className="w-6 h-6 bg-emerald-900/60 p-1 rounded-xl" />
+              <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 shadow-natural space-y-2">
+                <div className="flex items-center justify-between text-[#386641]">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Specimen Catalog</span>
+                  <Package className="w-5 h-5 bg-emerald-100 p-1 rounded-full" />
                 </div>
-                <div className="font-cinzel text-3xl font-bold text-white">
-                  {statsData?.publishedProducts || 0} / {statsData?.totalProducts || 0}
+                <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
+                  {statsData?.publishedProducts || productsList.length} / {statsData?.totalProducts || productsList.length}
                 </div>
-                <p className="text-xs text-emerald-200/60 font-mono">
-                  {statsData?.totalUnits || 0} Total Units In Stock
+                <p className="text-xs text-slate-500 font-light">
+                  {statsData?.totalUnits || 0} Total Plant Stock Units
                 </p>
               </div>
 
-              <div className="bg-[#0b2117] border border-emerald-800/30 rounded-3xl p-6 space-y-3 shadow-xl">
-                <div className="flex items-center justify-between text-amber-400">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-200/60">Low Stock Alerts</span>
-                  <AlertTriangle className="w-6 h-6 bg-amber-900/60 p-1 rounded-xl text-amber-400" />
+              <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 shadow-natural space-y-2">
+                <div className="flex items-center justify-between text-amber-700">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock Alerts</span>
+                  <AlertTriangle className="w-5 h-5 bg-amber-100 p-1 rounded-full text-amber-700" />
                 </div>
-                <div className="font-cinzel text-3xl font-bold text-white">
+                <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
                   {statsData?.lowStockProducts || 0} Low Stock
                 </div>
-                <p className="text-xs text-rose-400 font-mono">
+                <p className="text-xs text-rose-700 font-medium">
                   {statsData?.outOfStockProducts || 0} Out of Stock
                 </p>
               </div>
             </div>
 
-            {/* Recent Orders & Action Table */}
-            <div className="bg-[#0b2117] border border-emerald-800/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-cinzel text-xl font-bold text-white">Recent Customer Orders</h3>
-                  <p className="text-xs text-emerald-200/60 font-light">All customer purchases synchronized with Supabase PostgreSQL</p>
+            {/* Quick Actions & Recent Orders */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-cinzel text-lg font-bold text-[#0f2d21]">Live Incoming Customer Orders</h3>
+                    <p className="text-slate-500 text-xs font-light">Updated in real-time every 5 seconds</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className="text-xs font-semibold text-[#386641] hover:underline flex items-center gap-1"
+                  >
+                    <span>Manage All Orders ({ordersList.length})</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setActiveTab('orders')}
-                  className="text-xs font-semibold text-emerald-400 hover:underline flex items-center gap-1"
-                >
-                  <span>Manage All Orders</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+
+                <div className="space-y-3">
+                  {ordersList.slice(0, 5).map((ord: any) => (
+                    <div
+                      key={ord.id}
+                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-[#0f2d21]">{ord.orderNumber}</span>
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              ord.status === 'PENDING'
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                : ord.status === 'CONFIRMED'
+                                ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                : ord.status === 'DELIVERED'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                : 'bg-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {ord.status}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              ord.paymentStatus === 'PAID'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
+                            {ord.paymentMethod} ({ord.paymentStatus})
+                          </span>
+                        </div>
+                        <p className="text-slate-600 font-medium">
+                          Customer: <strong>{ord.user?.name || 'Customer'}</strong> ({ord.user?.email})
+                        </p>
+                      </div>
+                      <div className="text-right flex items-center justify-between sm:justify-end gap-4">
+                        <span className="font-cinzel font-bold text-lg text-[#0f2d21]">₹{ord.total}</span>
+                        <button
+                          onClick={() => setSelectedOrder(ord)}
+                          className="px-3 py-1.5 rounded-xl bg-[#386641] hover:bg-[#2d5234] text-white text-xs font-semibold transition-all"
+                        >
+                          Inspect
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {ordersList.length === 0 && (
+                    <div className="text-center py-8 text-slate-500 text-xs italic">
+                      No customer orders recorded yet in database.
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-3">
-                {ordersList.slice(0, 6).map((ord: any) => (
-                  <div
-                    key={ord.id}
-                    className="p-4 rounded-2xl bg-[#071710] border border-emerald-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
+              {/* Quick Actions Panel */}
+              <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural space-y-6">
+                <h3 className="font-cinzel text-lg font-bold text-[#0f2d21]">Inventory Quick Operations</h3>
+                <div className="space-y-3 text-xs">
+                  <button
+                    onClick={() => {
+                      setActiveTab('products');
+                      setShowAddProductModal(true);
+                    }}
+                    className="w-full p-4 rounded-2xl bg-[#386641] text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#2d5234] transition-all shadow-natural"
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-white">{ord.orderNumber}</span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            ord.status === 'PENDING'
-                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                              : ord.status === 'CONFIRMED'
-                              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                              : ord.status === 'DELIVERED'
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-slate-800 text-slate-300'
-                          }`}
-                        >
-                          {ord.status}
-                        </span>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            ord.paymentStatus === 'PAID'
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                          }`}
-                        >
-                          {ord.paymentMethod} ({ord.paymentStatus})
-                        </span>
-                      </div>
-                      <p className="text-emerald-200/70 font-light">
-                        {ord.user?.name || 'Customer'} ({ord.user?.email}) • {ord.items?.length || 0} item(s)
-                      </p>
-                    </div>
+                    <Plus className="w-4 h-4" />
+                    <span>Add New Plant Specimen</span>
+                  </button>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-4">
-                      <span className="font-cinzel font-bold text-base text-white">₹{ord.total}</span>
-                      <button
-                        onClick={() => setSelectedOrder(ord)}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 text-[11px] font-semibold border border-emerald-700/40"
-                      >
-                        Inspect Order
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  <button
+                    onClick={() => {
+                      refetchStats();
+                      refetchOrders();
+                      refetchProducts();
+                    }}
+                    className="w-full p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-[#386641] font-semibold flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Refresh Real-time Database</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* TAB 2: ALL CUSTOMER ORDERS */}
+        {/* TAB 2: ORDER FULFILLMENT & MANAGEMENT */}
         {activeTab === 'orders' && (
-          <div className="bg-[#0b2117] border border-emerald-800/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-emerald-900/40">
+          <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-emerald-900/10 pb-4">
               <div>
-                <h2 className="font-cinzel text-xl font-bold text-white">Fulfillment & Status Control</h2>
-                <p className="text-xs text-emerald-200/60 font-light">
-                  Process incoming orders, transition statuses, and collect Cash on Delivery payments.
+                <h2 className="font-cinzel text-xl font-bold text-[#0f2d21]">Customer Order Processing &amp; Fulfillment</h2>
+                <p className="text-slate-500 text-xs font-light">
+                  Real-time synchronization with Supabase PostgreSQL (Auto-refreshes every 5 seconds).
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search Order Number or Email..."
+                    placeholder="Search Order #, Name, or Email..."
                     value={orderSearch}
                     onChange={(e) => setOrderSearch(e.target.value)}
-                    className="pl-9 pr-3 py-2 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white placeholder-emerald-700 focus:outline-none focus:border-emerald-500"
+                    className="pl-10 pr-4 py-2 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                   />
                 </div>
 
                 <select
                   value={orderStatusFilter}
                   onChange={(e) => setOrderStatusFilter(e.target.value)}
-                  className="px-3 py-2 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white focus:outline-none"
+                  className="px-3.5 py-2 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs text-[#0f2d21] focus:outline-none"
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="PENDING">PENDING</option>
@@ -628,12 +597,12 @@ export const AdminPage: React.FC = () => {
               {ordersList.map((ord: any) => (
                 <div
                   key={ord.id}
-                  className="p-5 rounded-2xl bg-[#071710] border border-emerald-900/40 space-y-4 text-xs"
+                  className="p-6 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-4 text-xs shadow-xs"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-900/40 pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
                     <div className="flex items-center gap-3">
-                      <span className="font-mono font-bold text-sm text-white">{ord.orderNumber}</span>
-                      <span className="text-emerald-400/60 text-[11px]">
+                      <span className="font-mono font-bold text-sm text-[#0f2d21]">{ord.orderNumber}</span>
+                      <span className="text-slate-400 text-xs">
                         {new Date(ord.createdAt).toLocaleString()}
                       </span>
                     </div>
@@ -642,24 +611,23 @@ export const AdminPage: React.FC = () => {
                       <span
                         className={`px-3 py-1 rounded-full text-[10px] font-bold ${
                           ord.status === 'PENDING'
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
                             : ord.status === 'CONFIRMED'
-                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                            ? 'bg-blue-100 text-blue-800 border border-blue-300'
                             : ord.status === 'SHIPPED'
-                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                            ? 'bg-purple-100 text-purple-800 border border-purple-300'
                             : ord.status === 'DELIVERED'
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-slate-800 text-slate-300'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-slate-200 text-slate-700'
                         }`}
                       >
                         {ord.status}
                       </span>
-
                       <span
                         className={`px-3 py-1 rounded-full text-[10px] font-bold ${
                           ord.paymentStatus === 'PAID'
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-amber-100 text-amber-800 border border-amber-300'
                         }`}
                       >
                         {ord.paymentMethod} ({ord.paymentStatus})
@@ -670,15 +638,15 @@ export const AdminPage: React.FC = () => {
                   {/* Customer Info & Address */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <p className="font-semibold text-emerald-300 mb-1">Customer Info:</p>
-                      <p className="text-white font-medium">{ord.user?.name || 'Customer'}</p>
-                      <p className="text-emerald-200/60 font-mono text-[11px]">{ord.user?.email}</p>
-                      <p className="text-emerald-200/60 font-mono text-[11px]">{ord.user?.phone || 'No phone'}</p>
+                      <p className="font-semibold text-slate-700 mb-1">Customer Account:</p>
+                      <p className="text-[#0f2d21] font-bold text-sm">{ord.user?.name || 'Customer'}</p>
+                      <p className="text-slate-500 font-mono text-[11px]">{ord.user?.email}</p>
+                      <p className="text-slate-500 font-mono text-[11px]">{ord.user?.phone || 'No phone'}</p>
                     </div>
 
                     <div>
-                      <p className="font-semibold text-emerald-300 mb-1">Shipping Address:</p>
-                      <p className="text-emerald-100 font-light">
+                      <p className="font-semibold text-slate-700 mb-1">Shipping Address:</p>
+                      <p className="text-slate-600 font-light leading-relaxed">
                         {ord.shippingAddress?.fullName || ord.shippingAddress?.name}<br />
                         {ord.shippingAddress?.addressLine1}, {ord.shippingAddress?.addressLine2 ? `${ord.shippingAddress.addressLine2}, ` : ''}
                         {ord.shippingAddress?.city}, {ord.shippingAddress?.state} - {ord.shippingAddress?.postalCode}
@@ -687,26 +655,26 @@ export const AdminPage: React.FC = () => {
 
                     <div className="text-right flex flex-col justify-between">
                       <div>
-                        <p className="font-semibold text-emerald-300 mb-1">Total Amount:</p>
-                        <p className="font-cinzel text-2xl font-bold text-white">₹{ord.total}</p>
+                        <p className="font-semibold text-slate-700 mb-1">Total Order Value:</p>
+                        <p className="font-cinzel text-2xl font-bold text-[#0f2d21]">₹{ord.total}</p>
                       </div>
                       <button
                         onClick={() => setSelectedOrder(ord)}
-                        className="text-xs text-emerald-400 hover:underline text-right mt-2"
+                        className="text-xs font-semibold text-[#386641] hover:underline text-right mt-2"
                       >
-                        Inspect Items &amp; Timeline →
+                        Inspect Line Items &amp; Timeline →
                       </button>
                     </div>
                   </div>
 
                   {/* FULFILLMENT ACTIONS BAR */}
-                  <div className="pt-3 border-t border-emerald-900/40 flex flex-wrap items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-emerald-400 font-semibold">Fulfillment Action:</span>
+                      <span className="text-xs font-semibold text-slate-700">Fulfillment Status Action:</span>
                       {ord.status === 'PENDING' && (
                         <button
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'CONFIRMED' })}
-                          className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] transition-colors"
+                          className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-all shadow-xs"
                         >
                           Confirm Order
                         </button>
@@ -715,7 +683,7 @@ export const AdminPage: React.FC = () => {
                       {ord.status === 'CONFIRMED' && (
                         <button
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'SHIPPED' })}
-                          className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-[11px] transition-colors"
+                          className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs transition-all shadow-xs"
                         >
                           Dispatch / Ship Order
                         </button>
@@ -724,7 +692,7 @@ export const AdminPage: React.FC = () => {
                       {ord.status === 'SHIPPED' && (
                         <button
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'DELIVERED' })}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] transition-colors"
+                          className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-all shadow-xs"
                         >
                           Mark Delivered
                         </button>
@@ -734,7 +702,7 @@ export const AdminPage: React.FC = () => {
                     {ord.paymentStatus !== 'PAID' && (
                       <button
                         onClick={() => collectCodMutation.mutate(ord.orderNumber)}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-900/80 hover:bg-emerald-800 border border-emerald-600/50 text-emerald-200 font-semibold text-[11px] transition-colors"
+                        className="px-3.5 py-1.5 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800 font-semibold text-xs hover:bg-emerald-200 transition-all"
                       >
                         Collect Cash Payment (₹{ord.total})
                       </button>
@@ -744,146 +712,163 @@ export const AdminPage: React.FC = () => {
               ))}
 
               {ordersList.length === 0 && (
-                <div className="text-center py-16 space-y-3">
-                  <ShoppingBag className="w-10 h-10 text-emerald-900/80 mx-auto" />
-                  <p className="text-emerald-200/60 text-xs">No orders match the filter query.</p>
+                <div className="text-center py-16 space-y-2">
+                  <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto" />
+                  <p className="text-slate-500 text-xs">No orders match the selected filter criteria.</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* TAB 3: PLANT CATALOG & STOCK */}
+        {/* TAB 3: PLANT CATALOG (MATCHES STOREFRONT TEMPLATE CARD DESIGN) */}
         {activeTab === 'products' && (
-          <div className="bg-[#0b2117] border border-emerald-800/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-900/40">
+          <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-900/10 pb-4">
               <div>
-                <h2 className="font-cinzel text-xl font-bold text-white">Botanical Catalog &amp; Inventory</h2>
-                <p className="text-xs text-emerald-200/60 font-light">
-                  Add new plant specimens, adjust stock quantities, and publish/unpublish items.
+                <h2 className="font-cinzel text-xl font-bold text-[#0f2d21]">Botanical Catalog Management</h2>
+                <p className="text-slate-500 text-xs font-light">
+                  Add new plant specimens with the exact storefront card design template.
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="Search Product Name..."
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
-                    className="pl-9 pr-3 py-2 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white placeholder-emerald-700 focus:outline-none"
+                    className="pl-10 pr-4 py-2 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                   />
                 </div>
 
                 <button
                   onClick={() => setShowAddProductModal(true)}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs"
+                  className="px-4 py-2.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs flex items-center gap-2 shadow-natural transition-all"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Product</span>
+                  <span>Add New Product</span>
                 </button>
               </div>
             </div>
 
-            {/* Products Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-emerald-900/40 text-emerald-400/80 uppercase tracking-wider font-semibold">
-                    <th className="py-3 px-4">Plant Specimen</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Price</th>
-                    <th className="py-3 px-4">Stock Level</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-emerald-950">
-                  {productsList.map((p: any) => (
-                    <tr key={p.id} className="hover:bg-[#071710] transition-colors">
-                      <td className="py-3.5 px-4 font-semibold text-white flex items-center gap-3">
-                        <img
-                          src={p.images?.[0]?.url || 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80'}
-                          alt={p.name}
-                          className="w-10 h-10 rounded-xl object-cover bg-emerald-950 border border-emerald-800/40"
-                        />
-                        <div>
-                          <span className="block font-bold text-white">{p.name}</span>
-                          <span className="block text-[10px] font-mono text-emerald-400/70">{p.id}</span>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-emerald-200/80">{p.category?.name || 'Category'}</td>
-                      <td className="py-3.5 px-4 font-cinzel font-bold text-white">
-                        ₹{p.salePrice ?? p.price}
-                        {p.salePrice && <span className="text-emerald-400/60 line-through text-[10px] ml-1.5">₹{p.price}</span>}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => updateStockMutation.mutate({ productId: p.id, stockQuantity: Math.max(0, p.stockQuantity - 5) })}
-                            className="w-6 h-6 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 font-bold text-xs"
-                            title="Decrease Stock (-5)"
-                          >
-                            -
-                          </button>
-                          <span className={`font-mono font-bold ${p.stockQuantity < 10 ? 'text-amber-400' : 'text-emerald-200'}`}>
-                            {p.stockQuantity}
-                          </span>
-                          <button
-                            onClick={() => updateStockMutation.mutate({ productId: p.id, stockQuantity: p.stockQuantity + 10 })}
-                            className="w-6 h-6 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 font-bold text-xs"
-                            title="Increase Stock (+10)"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4">
+            {/* PRODUCT CARD GRID MATCHING STOREFRONT TEMPLATE DESIGN */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {productsList.map((p: any) => (
+                <div
+                  key={p.id}
+                  className="bg-[#faf9f6] border border-emerald-900/10 rounded-3xl overflow-hidden shadow-natural hover:shadow-natural-lg transition-all duration-300 flex flex-col justify-between group"
+                >
+                  <div>
+                    {/* Image & Badge Overlay */}
+                    <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
+                      <img
+                        src={p.images?.[0]?.url || 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80'}
+                        alt={p.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            p.published ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            p.published
+                              ? 'bg-emerald-800 text-white'
+                              : 'bg-slate-700 text-white'
                           }`}
                         >
                           {p.published ? 'PUBLISHED' : 'DRAFT'}
                         </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right space-x-2">
-                        <button
-                          onClick={() => togglePublishMutation.mutate({ productId: p.id, published: !p.published })}
-                          className="p-2 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-800/40 text-emerald-300 transition-colors"
-                          title={p.published ? 'Unpublish' : 'Publish'}
-                        >
-                          {p.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {p.stockQuantity < 10 && (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-600 text-white">
+                            LOW STOCK ({p.stockQuantity})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="p-5 space-y-3">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#386641] block">
+                        {p.category?.name || 'Indoor Plant'}
+                      </span>
+                      <h3 className="font-cinzel font-bold text-base text-[#0f2d21] line-clamp-1">
+                        {p.name}
+                      </h3>
+                      <p className="text-slate-500 text-xs line-clamp-2 font-light">
+                        {p.description || 'Healthy nursery plant specimen with premium potting.'}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-2">
+                        <div>
+                          <span className="font-cinzel text-lg font-bold text-[#0f2d21]">
+                            ₹{p.salePrice ?? p.price}
+                          </span>
+                          {p.salePrice && (
+                            <span className="text-slate-400 line-through text-xs ml-2">
+                              ₹{p.price}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs font-mono font-semibold text-slate-600">
+                          Stock: {p.stockQuantity}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Super Admin Quick Control Actions */}
+                  <div className="p-4 bg-white border-t border-emerald-900/10 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => updateStockMutation.mutate({ productId: p.id, stockQuantity: Math.max(0, p.stockQuantity - 5) })}
+                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0f2d21] font-bold text-xs flex items-center justify-center"
+                        title="Decrease Stock (-5)"
+                      >
+                        -
+                      </button>
+                      <button
+                        onClick={() => updateStockMutation.mutate({ productId: p.id, stockQuantity: p.stockQuantity + 10 })}
+                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0f2d21] font-bold text-xs flex items-center justify-center"
+                        title="Increase Stock (+10)"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => togglePublishMutation.mutate({ productId: p.id, published: !p.published })}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-100 text-[#386641] text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    >
+                      {p.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{p.published ? 'Unpublish' : 'Publish'}</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* TAB 4: REGISTERED CUSTOMERS */}
+        {/* TAB 4: CUSTOMER ACCOUNTS */}
         {activeTab === 'users' && (
-          <div className="bg-[#0b2117] border border-emerald-800/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-900/40">
+          <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-emerald-900/10 pb-4">
               <div>
-                <h2 className="font-cinzel text-xl font-bold text-white">Registered Customer Accounts</h2>
-                <p className="text-xs text-emerald-200/60 font-light">
-                  View customer profiles, order history counts, and status permissions.
+                <h2 className="font-cinzel text-xl font-bold text-[#0f2d21]">Registered Customer Accounts</h2>
+                <p className="text-slate-500 text-xs font-light">
+                  View customer profiles, orders placed, and toggle status permissions.
                 </p>
               </div>
 
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Search Name or Email..."
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
-                  className="pl-9 pr-3 py-2 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white placeholder-emerald-700 focus:outline-none"
+                  className="pl-10 pr-4 py-2 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs text-[#0f2d21] focus:outline-none"
                 />
               </div>
             </div>
@@ -891,39 +876,41 @@ export const AdminPage: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-emerald-900/40 text-emerald-400/80 uppercase tracking-wider font-semibold">
+                  <tr className="border-b border-slate-200 text-slate-400 uppercase tracking-wider font-semibold">
                     <th className="py-3 px-4">User Name</th>
                     <th className="py-3 px-4">Email / Contact</th>
                     <th className="py-3 px-4">Role</th>
                     <th className="py-3 px-4">Orders Placed</th>
-                    <th className="py-3 px-4">Account Status</th>
+                    <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-emerald-950">
+                <tbody className="divide-y divide-slate-100">
                   {usersList.map((u: any) => (
-                    <tr key={u.id} className="hover:bg-[#071710] transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-white">{u.name}</td>
+                    <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-[#0f2d21]">{u.name}</td>
                       <td className="py-3.5 px-4">
-                        <span className="block text-emerald-200/90 font-mono">{u.email}</span>
-                        <span className="block text-[10px] text-emerald-400/60 font-mono">{u.phone || 'No phone'}</span>
+                        <span className="block font-mono text-[#0f2d21]">{u.email}</span>
+                        <span className="block text-[10px] text-slate-400 font-mono">{u.phone || 'No phone'}</span>
                       </td>
                       <td className="py-3.5 px-4">
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            u.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            u.role === 'ADMIN'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-emerald-100 text-emerald-800'
                           }`}
                         >
                           {u.role}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-emerald-200 font-bold">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#0f2d21]">
                         {u._count?.orders || 0} order(s)
                       </td>
                       <td className="py-3.5 px-4">
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            u.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                            u.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
                           }`}
                         >
                           {u.status}
@@ -933,7 +920,7 @@ export const AdminPage: React.FC = () => {
                         {u.role !== 'ADMIN' && (
                           <button
                             onClick={() => toggleUserStatusMutation.mutate({ userId: u.id, status: u.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' })}
-                            className="px-3 py-1 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 text-[11px] font-semibold"
+                            className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
                           >
                             {u.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
                           </button>
@@ -946,60 +933,60 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
         )}
-      </main>
+      </div>
 
       {/* INSPECT ORDER MODAL */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#0b2117] border border-emerald-800/40 rounded-3xl p-6 sm:p-8 max-w-xl w-full space-y-6 shadow-2xl text-xs text-emerald-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-emerald-900/40 pb-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full space-y-6 shadow-2xl text-xs text-[#0f2d21] max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-cinzel text-xl font-bold text-white">Order Details: {selectedOrder.orderNumber}</h3>
-                <span className="text-[11px] text-emerald-400 font-mono">{new Date(selectedOrder.createdAt).toLocaleString()}</span>
+                <h3 className="font-cinzel text-xl font-bold">Order Details: {selectedOrder.orderNumber}</h3>
+                <span className="text-[11px] text-slate-400 font-mono">{new Date(selectedOrder.createdAt).toLocaleString()}</span>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="text-emerald-400 hover:text-white text-lg font-bold"
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
               >
                 ✕
               </button>
             </div>
 
             {/* Customer & Address */}
-            <div className="grid grid-cols-2 gap-4 bg-[#071610] p-4 rounded-2xl border border-emerald-900/30">
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
               <div>
-                <p className="font-semibold text-emerald-300 mb-1">Customer:</p>
-                <p className="text-white font-medium">{selectedOrder.user?.name || 'Customer'}</p>
-                <p className="text-emerald-400/80 font-mono text-[11px]">{selectedOrder.user?.email}</p>
+                <p className="font-semibold text-slate-700 mb-1">Customer Account:</p>
+                <p className="font-bold text-[#0f2d21]">{selectedOrder.user?.name || 'Customer'}</p>
+                <p className="text-slate-500 font-mono text-[11px]">{selectedOrder.user?.email}</p>
               </div>
               <div>
-                <p className="font-semibold text-emerald-300 mb-1">Payment &amp; Status:</p>
-                <p className="text-white font-medium">{selectedOrder.paymentMethod} ({selectedOrder.paymentStatus})</p>
-                <p className="text-emerald-400/80 text-[11px]">Status: {selectedOrder.status}</p>
+                <p className="font-semibold text-slate-700 mb-1">Payment &amp; Status:</p>
+                <p className="font-bold text-[#0f2d21]">{selectedOrder.paymentMethod} ({selectedOrder.paymentStatus})</p>
+                <p className="text-slate-500 text-[11px]">Fulfillment Status: {selectedOrder.status}</p>
               </div>
             </div>
 
             {/* Items */}
             <div className="space-y-3">
-              <p className="font-semibold text-white">Order Line Items:</p>
+              <p className="font-semibold text-[#0f2d21]">Order Line Items:</p>
               {selectedOrder.items?.map((it: any) => (
-                <div key={it.id} className="flex items-center justify-between p-3 rounded-xl bg-[#071610] border border-emerald-900/30">
-                  <span className="font-bold text-white">{it.productNameSnapshot || 'Plant Item'}</span>
-                  <span className="font-mono text-emerald-300">{it.quantity} x ₹{it.priceSnapshot} = ₹{it.subtotal}</span>
+                <div key={it.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="font-bold text-[#0f2d21]">{it.productNameSnapshot || 'Plant Item'}</span>
+                  <span className="font-mono text-slate-600">{it.quantity} x ₹{it.priceSnapshot} = ₹{it.subtotal}</span>
                 </div>
               ))}
             </div>
 
             {/* Total */}
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-950 border border-emerald-800/40 text-sm">
-              <span className="font-bold text-white">Total Order Value:</span>
-              <span className="font-cinzel font-bold text-xl text-white">₹{selectedOrder.total}</span>
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-sm">
+              <span className="font-bold text-[#0f2d21]">Total Order Value:</span>
+              <span className="font-cinzel font-bold text-xl text-[#386641]">₹{selectedOrder.total}</span>
             </div>
 
             <div className="pt-4 flex justify-end">
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="px-6 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
+                className="px-6 py-2.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs"
               >
                 Close Window
               </button>
@@ -1008,78 +995,78 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* ADD PRODUCT MODAL */}
+      {/* ADD PRODUCT MODAL MATCHING STOREFRONT DESIGN */}
       {showAddProductModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#0b2117] border border-emerald-800/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl text-xs text-emerald-100">
-            <div className="flex items-center justify-between border-b border-emerald-900/40 pb-4">
-              <h3 className="font-cinzel text-xl font-bold text-white">Add New Plant Specimen</h3>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl text-xs text-[#0f2d21]">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <h3 className="font-cinzel text-xl font-bold text-[#0f2d21]">Add New Plant Specimen</h3>
               <button
                 onClick={() => setShowAddProductModal(false)}
-                className="text-emerald-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
               >
                 ✕
               </button>
             </div>
 
             {formMsg && (
-              <div className="p-3 rounded-xl bg-amber-900/40 border border-amber-500/40 text-amber-300 text-xs">{formMsg}</div>
+              <div className="p-3 rounded-xl bg-amber-50 text-amber-800 text-xs">{formMsg}</div>
             )}
 
             <form onSubmit={handleCreateProduct} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-emerald-300 mb-1">Plant Name *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Plant Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Variegated Monstera Albo"
                   value={newProdName}
                   onChange={(e) => setNewProdName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-semibold text-emerald-300 mb-1">Regular Price (₹) *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Regular Price (₹) *</label>
                   <input
                     type="number"
                     required
                     placeholder="999"
                     value={newProdPrice}
                     onChange={(e) => setNewProdPrice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-emerald-300 mb-1">Sale Price (₹)</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Sale Price (₹)</label>
                   <input
                     type="number"
                     placeholder="799"
                     value={newProdSalePrice}
                     onChange={(e) => setNewProdSalePrice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-semibold text-emerald-300 mb-1">Initial Stock Quantity *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Initial Stock Quantity *</label>
                   <input
                     type="number"
                     required
                     value={newProdStock}
                     onChange={(e) => setNewProdStock(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-emerald-300 mb-1">Category *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Category *</label>
                   <select
                     value={newProdCategory}
                     onChange={(e) => setNewProdCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                   >
                     <option value="cat-indoor">Indoor Plants</option>
                     <option value="cat-outdoor">Outdoor Plants &amp; Palms</option>
@@ -1092,47 +1079,49 @@ export const AdminPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-emerald-300 mb-1">Image URL</label>
+                <label className="block font-semibold text-slate-700 mb-1">Image URL</label>
                 <input
                   type="url"
                   placeholder="https://images.unsplash.com/..."
                   value={newProdImage}
                   onChange={(e) => setNewProdImage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-emerald-300 mb-1">Description</label>
+                <label className="block font-semibold text-slate-700 mb-1">Description</label>
                 <textarea
                   rows={3}
                   placeholder="Plant description..."
                   value={newProdDesc}
                   onChange={(e) => setNewProdDesc(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#071610] border border-emerald-800/40 rounded-xl text-xs text-white focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                 />
               </div>
 
-              <div className="pt-4 flex items-center justify-end gap-3 border-t border-emerald-900/40">
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowAddProductModal(false)}
-                  className="px-4 py-2 rounded-full border border-emerald-800 text-emerald-300 font-semibold"
+                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createProductMutation.isPending}
-                  className="px-6 py-2 rounded-full bg-emerald-600 text-white font-semibold hover:bg-emerald-500"
+                  className="px-6 py-2.5 rounded-full bg-[#386641] text-white font-semibold hover:bg-[#2d5234]"
                 >
-                  {createProductMutation.isPending ? 'Saving...' : 'Save Product'}
+                  {createProductMutation.isPending ? 'Saving...' : 'Save Product Specimen'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <FinalCTA />
     </div>
   );
 };
