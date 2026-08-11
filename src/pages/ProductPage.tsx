@@ -5,12 +5,12 @@ import { businessData } from '../data/business';
 import { Navbar } from '../components/navigation/Navbar';
 import { FinalCTA } from '../components/footer/FinalCTA';
 import { Sun, Droplets, Shield, MessageSquare, ShoppingBag, ArrowLeft, Leaf } from 'lucide-react';
-import { useCartStore } from '../features/cart/cartStore';
+import { useCart } from '../hooks/useCart';
 import { useProduct } from '../hooks/useProducts';
 
 export const ProductPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const addItem = useCartStore((state) => state.addItem);
+  const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
 
   // Fetch product from API
@@ -21,7 +21,7 @@ export const ProductPage: React.FC = () => {
 
   const plant: PlantItem = apiProduct
     ? {
-        id: apiProduct.slug,
+        id: apiProduct.id || apiProduct.slug,
         name: apiProduct.name,
         botanicalName: apiProduct.botanicalName || '',
         categoryId: apiProduct.category.slug,
@@ -137,7 +137,7 @@ export const ProductPage: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => {
-                        addItem(plant);
+                        addToCart(plant);
                         setAdded(true);
                         setTimeout(() => setAdded(false), 2000);
                       }}

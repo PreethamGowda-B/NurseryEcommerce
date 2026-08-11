@@ -167,7 +167,12 @@ export function useCart() {
         clearCartMutation.isPending,
 
       addToCart: async (product: PlantItem, quantity = 1) => {
-        await addToCartMutation.mutateAsync({ productId: product.id, quantity });
+        guestStore.addItem(product, quantity);
+        try {
+          await addToCartMutation.mutateAsync({ productId: product.id, quantity });
+        } catch (err) {
+          console.error('Failed to sync item to backend cart:', err);
+        }
       },
 
       updateQuantity: async (productId: string, quantity: number) => {

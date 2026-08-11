@@ -3,7 +3,7 @@ import { plantCatalog as fallbackPlants, generateWhatsAppInquiryUrl, PlantItem }
 import { plantCategories as fallbackCategories } from '../../data/categories';
 import { businessData } from '../../data/business';
 import { Sun, Droplets, Shield, MessageSquare, Search, Leaf, X, ShoppingBag, RefreshCw } from 'lucide-react';
-import { useCartStore } from '../../features/cart/cartStore';
+import { useCart } from '../../hooks/useCart';
 import { useCategories, useProducts, ApiProduct } from '../../hooks/useProducts';
 import { Link } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ export const PlantCatalogSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeModalPlant, setActiveModalPlant] = useState<PlantItem | null>(null);
   const [addedToastPlant, setAddedToastPlant] = useState<string | null>(null);
-  const addItem = useCartStore((state) => state.addItem);
+  const { addToCart } = useCart();
 
   // Fetch API categories
   const { data: apiCategories, isLoading: categoriesLoading } = useCategories();
@@ -36,7 +36,7 @@ export const PlantCatalogSection: React.FC = () => {
 
   if (apiProductsData?.data) {
     displayPlants = apiProductsData.data.map((p: ApiProduct) => ({
-      id: p.slug,
+      id: p.id || p.slug,
       name: p.name,
       botanicalName: p.botanicalName || '',
       categoryId: p.category.slug,
@@ -230,7 +230,7 @@ export const PlantCatalogSection: React.FC = () => {
                     <div className="flex items-center justify-between gap-2">
                       <button
                         onClick={() => {
-                          addItem(plant);
+                          addToCart(plant);
                           setAddedToastPlant(plant.name);
                           setTimeout(() => setAddedToastPlant(null), 2000);
                         }}

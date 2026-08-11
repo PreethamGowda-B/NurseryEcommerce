@@ -159,8 +159,10 @@ export class CartService {
    * Add product to customer cart with stock validation and duplicate merging
    */
   static async addItem(userId: string, productId: string, quantity: number) {
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [{ id: productId }, { slug: productId }],
+      },
     });
 
     if (!product) {
@@ -181,7 +183,7 @@ export class CartService {
       where: {
         cartId_productId: {
           cartId: cart.id,
-          productId,
+          productId: product.id,
         },
       },
     });
@@ -201,7 +203,7 @@ export class CartService {
       await prisma.cartItem.create({
         data: {
           cartId: cart.id,
-          productId,
+          productId: product.id,
           quantity: newQuantity,
         },
       });
@@ -214,8 +216,10 @@ export class CartService {
    * Update item quantity in customer cart with stock validation
    */
   static async updateItemQuantity(userId: string, productId: string, quantity: number) {
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
+    const product = await prisma.product.findFirst({
+      where: {
+        OR: [{ id: productId }, { slug: productId }],
+      },
     });
 
     if (!product) {
@@ -232,7 +236,7 @@ export class CartService {
       where: {
         cartId_productId: {
           cartId: cart.id,
-          productId,
+          productId: product.id,
         },
       },
     });
@@ -254,20 +258,27 @@ export class CartService {
    */
   static async removeItem(userId: string, productId: string) {
     const cart = await this.getOrCreateCart(userId);
-
-    const existingItem = await prisma.cartItem.findUnique({
+    const product = await prisma.product.findFirst({
       where: {
-        cartId_productId: {
-          cartId: cart.id,
-          productId,
-        },
+        OR: [{ id: productId }, { slug: productId }],
       },
     });
 
-    if (existingItem) {
-      await prisma.cartItem.delete({
-        where: { id: existingItem.id },
+    if (product) {
+      const existingItem = await prisma.cartItem.findUnique({
+        where: {
+          cartId_productId: {
+            cartId: cart.id,
+            productId: product.id,
+          },
+        },
       });
+
+      if (existingItem) {
+        await prisma.cartItem.delete({
+          where: { id: existingItem.id },
+        });
+      }
     }
 
     return this.getFormattedCart(userId);

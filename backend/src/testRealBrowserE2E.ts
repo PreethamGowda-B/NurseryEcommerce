@@ -34,7 +34,7 @@ async function runBrowserE2E() {
     // 1. Open Storefront Homepage
     console.log('1️⃣ Navigating to https://nursery-ecommerce.vercel.app...');
     await page.goto('https://nursery-ecommerce.vercel.app', { waitUntil: 'networkidle2', timeout: 30000 });
-    await page.waitForTimeout?.(2000) || new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
     
     const screenshot1 = path.join(ARTIFACTS_DIR, '01_homepage_catalog.png');
     await page.screenshot({ path: screenshot1, fullPage: false });
