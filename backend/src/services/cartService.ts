@@ -331,7 +331,7 @@ export class CartService {
         await prisma.cartItem.create({
           data: {
             cartId: cart.id,
-            productId: gItem.productId,
+            productId: product.id,
             quantity: mergedQuantity,
           },
         });
