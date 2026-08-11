@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Navbar } from '../components/navigation/Navbar';
-import { FinalCTA } from '../components/footer/FinalCTA';
 import { useUser, useLogout } from '../hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
@@ -37,6 +35,7 @@ import {
   Sparkles,
   Tag,
   Boxes,
+  ExternalLink,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -95,10 +94,10 @@ export const AdminPage: React.FC = () => {
     queryKey: ['adminStats'],
     queryFn: async () => {
       const res = await api.get('/admin/dashboard/stats');
-      return res.data.data;
+      return res.data?.data || res.data;
     },
     enabled: isAdmin,
-    refetchInterval: 5000, // Real-time 5s polling for new incoming orders
+    refetchInterval: 5000,
   });
 
   // 2. Fetch Orders (POLLS REAL-TIME EVERY 5 SECONDS)
@@ -110,13 +109,13 @@ export const AdminPage: React.FC = () => {
       if (orderSearch) params.append('search', orderSearch);
       params.append('limit', '100');
       const res = await api.get(`/admin/orders?${params.toString()}`);
-      return res.data.data;
+      return res.data?.data || res.data;
     },
     enabled: isAdmin,
-    refetchInterval: 5000, // Real-time 5s polling for new incoming orders
+    refetchInterval: 5000,
   });
 
-  // 3. Fetch Products
+  // 3. Fetch Products (POLLS REAL-TIME EVERY 5 SECONDS)
   const { data: productsData, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['adminProducts', productSearch],
     queryFn: async () => {
@@ -124,7 +123,7 @@ export const AdminPage: React.FC = () => {
       if (productSearch) params.append('search', productSearch);
       params.append('limit', '100');
       const res = await api.get(`/admin/products?${params.toString()}`);
-      return res.data.data;
+      return res.data?.data || res.data;
     },
     enabled: isAdmin,
     refetchInterval: 5000,
@@ -137,18 +136,43 @@ export const AdminPage: React.FC = () => {
       const params = new URLSearchParams();
       if (userSearch) params.append('search', userSearch);
       const res = await api.get(`/admin/users?${params.toString()}`);
-      return res.data.data;
+      return res.data?.data || res.data;
     },
     enabled: isAdmin,
     refetchInterval: 10000,
   });
+
+  // Unbreakable robust array normalization across all API response shapes
+  const ordersList: any[] = Array.isArray(ordersData)
+    ? ordersData
+    : Array.isArray(ordersData?.data)
+    ? ordersData.data
+    : Array.isArray(ordersData?.orders)
+    ? ordersData.orders
+    : [];
+
+  const productsList: any[] = Array.isArray(productsData)
+    ? productsData
+    : Array.isArray(productsData?.data)
+    ? productsData.data
+    : Array.isArray(productsData?.products)
+    ? productsData.products
+    : [];
+
+  const usersList: any[] = Array.isArray(usersData)
+    ? usersData
+    : Array.isArray(usersData?.users)
+    ? usersData.users
+    : Array.isArray(usersData?.data)
+    ? usersData.data
+    : [];
 
   // Order Status Update Mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderNumber, status }: { orderNumber: string; status: string }) => {
       const res = await api.patch(`/admin/orders/${orderNumber}/status`, {
         status,
-        note: `Status updated to ${status} by admin`,
+        note: `Status updated to ${status} by super admin`,
       });
       return res.data;
     },
@@ -267,10 +291,10 @@ export const AdminPage: React.FC = () => {
 
   if (isUserLoading) {
     return (
-      <div className="min-h-screen bg-[#faf9f6] pt-28 flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] flex items-center justify-center">
         <div className="flex items-center gap-3 text-[#386641] font-semibold text-sm">
           <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Verifying Super Admin Authorization...</span>
+          <span>Authenticating Super Admin Session...</span>
         </div>
       </div>
     );
@@ -278,64 +302,112 @@ export const AdminPage: React.FC = () => {
 
   if (!user || user.role !== 'ADMIN') {
     return (
-      <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] pt-28">
-        <Navbar />
-        <div className="max-w-md mx-auto px-4 py-16 text-center space-y-6">
+      <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white border border-emerald-900/10 rounded-3xl p-8 text-center space-y-6 shadow-natural-lg">
           <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
             <ShieldAlert className="w-8 h-8" />
           </div>
           <div className="space-y-2">
-            <h1 className="font-cinzel text-2xl font-bold">Super Admin Access Required</h1>
+            <h1 className="font-cinzel text-2xl font-bold">Super Admin Portal Restricted</h1>
             <p className="text-slate-500 text-xs font-light leading-relaxed">
               You must be logged in as an authorized Sheeneeka Nursery Super Administrator to access this management console.
             </p>
           </div>
-          <div className="p-4 rounded-2xl bg-white border border-emerald-900/10 shadow-xs text-xs text-left space-y-2">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-left space-y-2">
             <p className="font-bold text-[#0f2d21]">Super Admin Seed Credentials:</p>
             <p className="font-mono text-slate-600 select-all">Email: admin@sheeneekanursery.in</p>
             <p className="font-mono text-slate-600 select-all">Password: Admin@Sheeneeka2026!</p>
           </div>
           <Link
             to="/login?redirect=/admin"
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#386641] text-white text-xs font-semibold hover:bg-[#2d5234] transition-all shadow-natural"
+            className="w-full py-3.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-natural transition-all"
           >
-            <span>Log In as Super Admin</span>
+            <span>Log In to Super Admin Console</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-        <FinalCTA />
       </div>
     );
   }
 
-  // Correct data extraction from backend response
-  const ordersList: any[] = ordersData?.data || [];
-  const productsList: any[] = productsData?.data || [];
-  const usersList: any[] = usersData?.users || [];
+  // Calculated live metrics
+  const totalRevenue = ordersList
+    .filter((o) => o.paymentStatus === 'PAID')
+    .reduce((sum, o) => sum + (o.total || 0), 0);
+
+  const pendingCodAmount = ordersList
+    .filter((o) => o.paymentMethod === 'COD' && o.paymentStatus === 'PENDING')
+    .reduce((sum, o) => sum + (o.total || 0), 0);
+
+  const pendingOrdersCount = ordersList.filter((o) => o.status === 'PENDING').length;
+  const lowStockCount = productsList.filter((p) => p.stockQuantity < 10).length;
+  const outOfStockCount = productsList.filter((p) => p.stockQuantity === 0).length;
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] pt-24 font-sans">
-      <Navbar />
+    <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] font-sans flex flex-col">
+      {/* DEDICATED SUPER ADMIN TOP NAVBAR (ISOLATED FROM CUSTOMER CART & STOREFRONT) */}
+      <header className="bg-white border-b border-emerald-900/10 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#386641] text-white flex items-center justify-center font-bold shadow-natural">
+              <Leaf className="w-6 h-6" />
+            </div>
+            <div>
+              <Link to="/" className="font-cinzel text-lg font-bold tracking-wide text-[#0f2d21] block leading-none hover:text-[#386641]">
+                SHEENEEKA NURSERY
+              </Link>
+              <span className="text-[10px] font-mono tracking-widest text-[#386641] font-bold uppercase">
+                SUPER ADMIN OPERATIONS PORTAL
+              </span>
+            </div>
+          </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* SUPER ADMIN HEADER CARD (BOTANICAL THEME MATCHING STOREFRONT) */}
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2 text-xs text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200/80 font-mono">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Supabase PostgreSQL • Realtime 5s Sync</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                to="/"
+                target="_blank"
+                className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-[#386641] text-xs font-semibold transition-colors"
+              >
+                <span>View Storefront</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="p-2.5 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 transition-colors"
+                title="Log Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* SUPER ADMIN MAIN CONTENT */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* SUPER ADMIN HEADER CARD */}
         <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 text-[#386641] text-[10px] font-bold uppercase tracking-widest">
-                <Sparkles className="w-3 h-3" />
-                <span>SUPER ADMIN OPERATIONS PORTAL</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Live Supabase PostgreSQL • Realtime 5s Sync</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-emerald-100/80 text-[#386641] text-[10px] font-bold uppercase tracking-widest">
+                CONTROL CENTER
+              </span>
+              <span className="text-xs font-mono text-slate-500">
+                Session Active: {user.name} ({user.email})
+              </span>
             </div>
             <h1 className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-              Sheeneeka Nursery Control Center
+              Executive Nursery Management
             </h1>
             <p className="text-slate-500 text-xs font-light">
-              Logged in as <strong className="text-[#386641] font-semibold">{user.name}</strong> ({user.email})
+              Manage incoming customer orders, inventory stock, plant catalog listings, and customer accounts.
             </p>
           </div>
 
@@ -402,36 +474,36 @@ export const AdminPage: React.FC = () => {
                   <DollarSign className="w-5 h-5 bg-emerald-100 p-1 rounded-full" />
                 </div>
                 <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-                  ₹{statsData?.revenue.paidRevenue.toLocaleString() || '0'}
+                  ₹{(statsData?.revenue?.paidRevenue ?? totalRevenue).toLocaleString()}
                 </div>
                 <p className="text-xs text-amber-700 font-medium">
-                  + ₹{statsData?.revenue.codPendingAmount.toLocaleString() || '0'} Pending COD
+                  + ₹{(statsData?.revenue?.codPendingAmount ?? pendingCodAmount).toLocaleString()} Pending COD
                 </p>
               </div>
 
               <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 shadow-natural space-y-2">
                 <div className="flex items-center justify-between text-blue-700">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Orders Placed</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Customer Orders</span>
                   <ShoppingBag className="w-5 h-5 bg-blue-100 p-1 rounded-full" />
                 </div>
                 <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-                  {statsData?.orders.total || ordersList.length}
+                  {statsData?.orders?.total ?? ordersList.length}
                 </div>
                 <p className="text-xs text-emerald-700 font-medium">
-                  {statsData?.orders.pending || 0} Need Confirmation
+                  {statsData?.orders?.pending ?? pendingOrdersCount} Need Action / Confirmation
                 </p>
               </div>
 
               <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 shadow-natural space-y-2">
                 <div className="flex items-center justify-between text-[#386641]">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Specimen Catalog</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Catalog</span>
                   <Package className="w-5 h-5 bg-emerald-100 p-1 rounded-full" />
                 </div>
                 <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-                  {statsData?.publishedProducts || productsList.length} / {statsData?.totalProducts || productsList.length}
+                  {statsData?.publishedProducts ?? productsList.length} / {statsData?.totalProducts ?? productsList.length}
                 </div>
                 <p className="text-xs text-slate-500 font-light">
-                  {statsData?.totalUnits || 0} Total Plant Stock Units
+                  {statsData?.totalUnits ?? 0} Total Plant Units In Stock
                 </p>
               </div>
 
@@ -441,21 +513,21 @@ export const AdminPage: React.FC = () => {
                   <AlertTriangle className="w-5 h-5 bg-amber-100 p-1 rounded-full text-amber-700" />
                 </div>
                 <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-                  {statsData?.lowStockProducts || 0} Low Stock
+                  {statsData?.lowStockProducts ?? lowStockCount} Low Stock
                 </div>
                 <p className="text-xs text-rose-700 font-medium">
-                  {statsData?.outOfStockProducts || 0} Out of Stock
+                  {statsData?.outOfStockProducts ?? outOfStockCount} Out of Stock
                 </p>
               </div>
             </div>
 
-            {/* Quick Actions & Recent Orders */}
+            {/* Quick Actions & Live Incoming Orders */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-cinzel text-lg font-bold text-[#0f2d21]">Live Incoming Customer Orders</h3>
-                    <p className="text-slate-500 text-xs font-light">Updated in real-time every 5 seconds</p>
+                    <h3 className="font-cinzel text-lg font-bold text-[#0f2d21]">Live Customer Orders</h3>
+                    <p className="text-slate-500 text-xs font-light">Auto-syncing every 5 seconds with PostgreSQL</p>
                   </div>
                   <button
                     onClick={() => setActiveTab('orders')}
@@ -467,13 +539,13 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                  {ordersList.slice(0, 5).map((ord: any) => (
+                  {ordersList.slice(0, 6).map((ord: any) => (
                     <div
                       key={ord.id}
                       className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
                     >
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-mono font-bold text-[#0f2d21]">{ord.orderNumber}</span>
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -499,14 +571,14 @@ export const AdminPage: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-slate-600 font-medium">
-                          Customer: <strong>{ord.user?.name || 'Customer'}</strong> ({ord.user?.email})
+                          Customer: <strong className="text-[#0f2d21]">{ord.user?.name || 'Customer'}</strong> ({ord.user?.email || 'Guest'})
                         </p>
                       </div>
                       <div className="text-right flex items-center justify-between sm:justify-end gap-4">
                         <span className="font-cinzel font-bold text-lg text-[#0f2d21]">₹{ord.total}</span>
                         <button
                           onClick={() => setSelectedOrder(ord)}
-                          className="px-3 py-1.5 rounded-xl bg-[#386641] hover:bg-[#2d5234] text-white text-xs font-semibold transition-all"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#386641] hover:bg-[#2d5234] text-white text-xs font-semibold transition-all shadow-xs"
                         >
                           Inspect
                         </button>
@@ -516,7 +588,7 @@ export const AdminPage: React.FC = () => {
 
                   {ordersList.length === 0 && (
                     <div className="text-center py-8 text-slate-500 text-xs italic">
-                      No customer orders recorded yet in database.
+                      No customer orders recorded in database yet.
                     </div>
                   )}
                 </div>
@@ -524,7 +596,7 @@ export const AdminPage: React.FC = () => {
 
               {/* Quick Actions Panel */}
               <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural space-y-6">
-                <h3 className="font-cinzel text-lg font-bold text-[#0f2d21]">Inventory Quick Operations</h3>
+                <h3 className="font-cinzel text-lg font-bold text-[#0f2d21]">Super Admin Operations</h3>
                 <div className="space-y-3 text-xs">
                   <button
                     onClick={() => {
@@ -546,7 +618,7 @@ export const AdminPage: React.FC = () => {
                     className="w-full p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-[#386641] font-semibold flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    <span>Refresh Real-time Database</span>
+                    <span>Force Real-Time Sync</span>
                   </button>
                 </div>
               </div>
@@ -561,7 +633,7 @@ export const AdminPage: React.FC = () => {
               <div>
                 <h2 className="font-cinzel text-xl font-bold text-[#0f2d21]">Customer Order Processing &amp; Fulfillment</h2>
                 <p className="text-slate-500 text-xs font-light">
-                  Real-time synchronization with Supabase PostgreSQL (Auto-refreshes every 5 seconds).
+                  Real-time database sync (Auto-refreshes every 5 seconds).
                 </p>
               </div>
 
@@ -714,7 +786,7 @@ export const AdminPage: React.FC = () => {
               {ordersList.length === 0 && (
                 <div className="text-center py-16 space-y-2">
                   <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto" />
-                  <p className="text-slate-500 text-xs">No orders match the selected filter criteria.</p>
+                  <p className="text-slate-500 text-xs">No customer orders match the selected filter criteria.</p>
                 </div>
               )}
             </div>
@@ -728,7 +800,7 @@ export const AdminPage: React.FC = () => {
               <div>
                 <h2 className="font-cinzel text-xl font-bold text-[#0f2d21]">Botanical Catalog Management</h2>
                 <p className="text-slate-500 text-xs font-light">
-                  Add new plant specimens with the exact storefront card design template.
+                  Add new plant specimens using the exact storefront card design template.
                 </p>
               </div>
 
@@ -933,7 +1005,7 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+      </main>
 
       {/* INSPECT ORDER MODAL */}
       {selectedOrder && (
@@ -1120,8 +1192,6 @@ export const AdminPage: React.FC = () => {
           </div>
         </div>
       )}
-
-      <FinalCTA />
     </div>
   );
 };
