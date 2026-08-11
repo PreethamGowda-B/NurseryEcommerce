@@ -9,6 +9,7 @@ export interface JwtPayload {
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_fallback_secret_min_32_characters_long';
 const COOKIE_NAME = 'token';
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 export function generateToken(payload: JwtPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
@@ -23,8 +24,8 @@ export function verifyToken(token: string): JwtPayload {
 export function setAuthCookie(res: Response, token: string): void {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/',
     maxAge: SEVEN_DAYS_MS,
   });
@@ -33,8 +34,8 @@ export function setAuthCookie(res: Response, token: string): void {
 export function clearAuthCookie(res: Response): void {
   res.cookie(COOKIE_NAME, '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/',
     expires: new Date(0),
   });

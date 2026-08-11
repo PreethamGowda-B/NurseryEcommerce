@@ -19,6 +19,25 @@ import { globalLimiter } from './middleware/rateLimit.js';
 import { errorHandler } from './middleware/error.js';
 import { NotFoundError } from './utils/errors.js';
 
+const isAllowedOrigin = (origin: string): boolean => {
+  if (!origin) return true;
+
+  // Exact configured environment variables
+  if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return true;
+  if (process.env.ADMIN_URL && origin === process.env.ADMIN_URL) return true;
+
+  // Local development origins
+  if (/^http:\/\/localhost:(3000|3001|5173|5174|8080)$/.test(origin)) return true;
+
+  // Vercel preview & production deployment domains (*.vercel.app)
+  if (/\.vercel\.app$/.test(origin)) return true;
+
+  // Render deployment domains (*.onrender.com)
+  if (/\.onrender\.com$/.test(origin)) return true;
+
+  return false;
+};
+
 export const createApp = (): Express => {
   const app = express();
 
@@ -29,20 +48,14 @@ export const createApp = (): Express => {
     })
   );
 
-  // CORS configuration
-  const allowedOrigins = [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    process.env.ADMIN_URL || 'http://localhost:3001',
-  ];
-
+  // Robust CORS configuration supporting cross-domain production deployments
   app.use(
     cors({
       origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps, curl, or server-to-server)
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || isAllowedOrigin(origin)) {
           callback(null, true);
         } else {
-          callback(new Error(`Origin ${origin} not allowed by CORS`));
+          callback(null, false);
         }
       },
       credentials: true,
@@ -69,21 +82,21 @@ export const createApp = (): Express => {
   app.use('/api', accountRouter);
   app.use('/api', orderRouter);
   app.use('/api', paymentRouter);
-  app.use('/api', adminProductsRouter);
-  app.use('/api', adminCategoriesRouter);
-  app.use('/api', adminDashboardRouter);
-  app.use('/api', adminOrdersRouter);
-  app.use('/api', adminInventoryRouter);
+
+  // Admin Routes
+  app.use('/api/admin', adminProductsRouter);
+  app.use('/api/admin', adminCategoriesRouter);
+  app.use('/api/admin', adminDashboardRouter);
+  app.use('/api/admin', adminOrdersRouter);
+  app.use('/api/admin', adminInventoryRouter);
 
   // 404 Handler
-  app.use('*', (_req, _res, next) => {
-    next(new NotFoundError('API endpoint not found'));
+  app.use((req, _res, next) => {
+    next(new NotFoundError(`API endpoint not found - Path: ${req.originalUrl}`));
   });
 
-  // Centralized Error Handling Middleware
+  // Global Error Handler
   app.use(errorHandler);
 
   return app;
 };
-
-export default createApp;
