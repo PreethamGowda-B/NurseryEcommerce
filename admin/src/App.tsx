@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ScrollToTop } from './components/ScrollToTop';
 import { LoginPage } from './pages/LoginPage';
 import { AdminLayout } from './components/AdminLayout';
 import { DashboardPage } from './pages/DashboardPage';
@@ -14,6 +15,7 @@ import { InventoryPage } from './pages/InventoryPage';
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 
