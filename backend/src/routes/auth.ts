@@ -63,7 +63,7 @@ router.post(
       const token = generateToken({ userId: user.id, role: user.role });
       setAuthCookie(res, token);
 
-      sendSuccess(res, user, 'Account created successfully', 201);
+      sendSuccess(res, { ...user, token }, 'Account created successfully', 201);
     } catch (err) {
       next(err);
     }
@@ -117,6 +117,7 @@ router.post(
         phone: user.phone,
         role: user.role,
         status: user.status,
+        token,
       };
 
       sendSuccess(res, safeUser, 'Logged in successfully');

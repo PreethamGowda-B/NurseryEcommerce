@@ -14,4 +14,13 @@ export const api = axios.create({
   },
 });
 
+// Attach bearer token header for cross-domain cookie restriction resilience
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export default api;

@@ -38,6 +38,9 @@ export function useAdminLogin() {
       return res.data;
     },
     onSuccess: (data) => {
+      if (data.data?.token) {
+        localStorage.setItem('auth_token', data.data.token);
+      }
       queryClient.setQueryData(['adminUser'], data.data);
     },
   });
@@ -51,6 +54,7 @@ export function useAdminLogout() {
       return res.data;
     },
     onSuccess: () => {
+      localStorage.removeItem('auth_token');
       queryClient.setQueryData(['adminUser'], null);
       queryClient.clear();
     },

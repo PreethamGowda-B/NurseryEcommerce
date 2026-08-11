@@ -36,6 +36,9 @@ export function useLogin() {
     },
     onSuccess: async (data) => {
       const user = data.data;
+      if (user?.token) {
+        localStorage.setItem('auth_token', user.token);
+      }
       queryClient.setQueryData(['currentUser'], user);
 
       // Merge local guest cart into backend cart upon login
@@ -68,6 +71,9 @@ export function useRegister() {
     },
     onSuccess: async (data) => {
       const user = data.data;
+      if (user?.token) {
+        localStorage.setItem('auth_token', user.token);
+      }
       queryClient.setQueryData(['currentUser'], user);
 
       // Merge local guest cart into backend cart upon registration
@@ -98,6 +104,7 @@ export function useLogout() {
       return res.data;
     },
     onSuccess: () => {
+      localStorage.removeItem('auth_token');
       queryClient.setQueryData(['currentUser'], null);
       useCartStore.getState().clearCart();
       queryClient.invalidateQueries({ queryKey: ['cart'] });
