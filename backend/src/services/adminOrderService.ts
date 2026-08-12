@@ -64,10 +64,11 @@ export class AdminOrderService {
 
     if (params.search) {
       where.OR = [
-        { orderNumber: { contains: params.search } },
-        { user: { name: { contains: params.search } } },
-        { user: { email: { contains: params.search } } },
-        { user: { phone: { contains: params.search } } },
+        { orderNumber: { contains: params.search, mode: 'insensitive' } },
+        { shippingAddressSnapshot: { contains: params.search, mode: 'insensitive' } },
+        { user: { name: { contains: params.search, mode: 'insensitive' } } },
+        { user: { email: { contains: params.search, mode: 'insensitive' } } },
+        { user: { phone: { contains: params.search, mode: 'insensitive' } } },
       ];
     }
 

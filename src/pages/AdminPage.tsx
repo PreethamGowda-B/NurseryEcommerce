@@ -207,10 +207,38 @@ export const AdminPage: React.FC = () => {
     refetchProducts();
   });
 
-  // Pure DB array normalization (ZERO SAMPLE FALLBACKS)
-  const ordersList: any[] = Array.isArray(ordersData) ? ordersData : [];
-  const productsList: any[] = Array.isArray(productsData) ? productsData : [];
-  const usersList: any[] = Array.isArray(usersData) ? usersData : [];
+  // Pure DB array normalization & Instant Real-time Filtering
+  const rawOrders: any[] = Array.isArray(ordersData) ? ordersData : [];
+  const rawProducts: any[] = Array.isArray(productsData) ? productsData : [];
+  const rawUsers: any[] = Array.isArray(usersData) ? usersData : [];
+
+  const ordersList: any[] = rawOrders.filter((ord: any) => {
+    if (orderStatusFilter !== 'ALL' && ord.status !== orderStatusFilter) {
+      return false;
+    }
+    if (orderSearch.trim()) {
+      const q = orderSearch.trim().toLowerCase();
+      const numMatch = ord.orderNumber?.toLowerCase().includes(q);
+      const nameMatch = ord.user?.name?.toLowerCase().includes(q) || ord.shippingAddress?.fullName?.toLowerCase().includes(q);
+      const emailMatch = ord.user?.email?.toLowerCase().includes(q);
+      const phoneMatch = ord.user?.phone?.toLowerCase().includes(q) || ord.shippingAddress?.phone?.toLowerCase().includes(q);
+      const addrMatch = ord.shippingAddress?.addressLine1?.toLowerCase().includes(q) || ord.shippingAddress?.city?.toLowerCase().includes(q);
+      return numMatch || nameMatch || emailMatch || phoneMatch || addrMatch;
+    }
+    return true;
+  });
+
+  const productsList: any[] = rawProducts.filter((p: any) => {
+    if (!productSearch.trim()) return true;
+    const q = productSearch.trim().toLowerCase();
+    return p.name?.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q);
+  });
+
+  const usersList: any[] = rawUsers.filter((u: any) => {
+    if (!userSearch.trim()) return true;
+    const q = userSearch.trim().toLowerCase();
+    return u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.phone?.toLowerCase().includes(q);
+  });
 
   // Order Status Update Mutation
   const updateStatusMutation = useMutation({
