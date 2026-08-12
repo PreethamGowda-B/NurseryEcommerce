@@ -22,78 +22,48 @@ export class PDFService {
   }
 
   /**
-   * Generate Ultra-Premium Executive A4 Invoice PDF
+   * Generate Clean A4 Invoice PDF (original design)
    */
   static async generateInvoicePDF(order: any): Promise<Buffer> {
-    const doc = new PDFDocument({ size: 'A4', margin: 35 });
+    const doc = new PDFDocument({ size: 'A4', margin: 40 });
 
-    // Outer Thin Gold/Emerald Frame
+    // BRAND HEADER
     doc
-      .rect(20, 20, 555, 802)
-      .lineWidth(1)
-      .strokeColor('#15803d')
-      .stroke();
-
-    // Brand Header Bar (Deep Forest Emerald)
-    doc
-      .rect(25, 25, 545, 65)
-      .fill('#0b2519');
-
-    // Gold Brand Accent Strip
-    doc
-      .rect(25, 87, 545, 3)
-      .fill('#b45309');
-
-    // Brand Title & Tagline
-    doc
-      .fillColor('#ffffff')
-      .fontSize(22)
+      .fillColor('#0f2d21')
+      .fontSize(26)
       .font('Helvetica-Bold')
-      .text('SHEENEEKA NURSERY', 45, 40)
-      .fontSize(8.5)
-      .font('Helvetica')
-      .fillColor('#86efac')
-      .text('BOTANICAL LUXURY & ECO-FRIENDLY SPECIMENS • OFFICIAL TAX INVOICE', 45, 68);
+      .text('SHEENEEKA NURSERY', 40, 40);
 
-    // Invoice Badge Box
     doc
-      .rect(385, 35, 175, 42)
-      .fillAndStroke('#166534', '#ffffff')
-      .fillColor('#ffffff')
+      .fontSize(9)
+      .font('Helvetica')
+      .fillColor('#386641')
+      .text('BRINGING NATURE CLOSER TO YOU  \u2022  OFFICIAL ORDER INVOICE', 40, 72);
+
+    // Invoice number badge (top right, green bordered box)
+    doc
+      .rect(370, 35, 185, 45)
+      .lineWidth(1.5)
+      .strokeColor('#166534')
+      .stroke()
+      .fillColor('#166534')
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('INVOICE NUMBER', 395, 43, { width: 155, align: 'center' })
-      .fontSize(11)
-      .text(order.orderNumber, 395, 57, { width: 155, align: 'center' });
+      .text(`INVOICE: ${order.orderNumber}`, 375, 50, { width: 175, align: 'center' });
 
-    // Section 1: Meta Details Grid
-    let y = 105;
-
-    // Order Meta Card
+    // Divider line
     doc
-      .rect(25, y, 265, 85)
-      .fillAndStroke('#f8fafc', '#e2e8f0');
+      .moveTo(40, 95)
+      .lineTo(555, 95)
+      .strokeColor('#e2e8f0')
+      .lineWidth(1)
+      .stroke();
 
-    doc
-      .fontSize(9.5)
-      .font('Helvetica-Bold')
-      .fillColor('#0b2519')
-      .text('ORDER INFORMATION', 35, y + 10)
-      .font('Helvetica')
-      .fontSize(8.5)
-      .fillColor('#334155')
-      .text(`Date Placed: ${new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 35, y + 28)
-      .text(`Fulfillment Status: ${order.status}`, 35, y + 42)
-      .text(`Payment Method: ${order.paymentMethod}`, 35, y + 56)
-      .text(`Payment Status: ${order.paymentStatus}`, 35, y + 70);
-
-    // Customer & Shipping Card
-    doc
-      .rect(295, y, 275, 85)
-      .fillAndStroke('#f8fafc', '#e2e8f0');
+    // ORDER DETAILS / CUSTOMER & DELIVERY DETAILS
+    let y = 115;
 
     const addr = order.shippingAddress || {};
-    const recipientName = addr.fullName || addr.name || order.user?.name || 'Valued Customer';
+    const recipientName = addr.fullName || addr.name || order.user?.name || 'Customer';
     const recipientPhone = addr.phone || order.user?.phone || 'N/A';
     const addressStr = [
       addr.addressLine1,
@@ -104,67 +74,89 @@ export class PDFService {
       .filter(Boolean)
       .join(', ');
 
+    // Left column
     doc
-      .fontSize(9.5)
+      .fontSize(10)
       .font('Helvetica-Bold')
-      .fillColor('#0b2519')
-      .text('DELIVERY & CUSTOMER DETAILS', 305, y + 10)
+      .fillColor('#0f2d21')
+      .text('ORDER DETAILS', 40, y)
+      .fontSize(9)
       .font('Helvetica')
-      .fontSize(8.5)
-      .fillColor('#334155')
-      .text(`Customer: ${recipientName}`, 305, y + 28)
-      .text(`Phone: ${recipientPhone}`, 305, y + 42)
-      .text(`Address: ${addressStr}`, 305, y + 56, { width: 255, height: 26, ellipsis: true });
+      .fillColor('#475569')
+      .text(`Order Date: ${new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}`, 40, y + 18)
+      .text(`Order Status: ${order.status}`, 40, y + 33)
+      .text(`Payment Method: ${order.paymentMethod}`, 40, y + 48)
+      .text(`Payment Status: ${order.paymentStatus}`, 40, y + 63);
 
-    y += 100;
-
-    // Items Table Header Header Bar
+    // Right column
     doc
-      .rect(25, y, 545, 26)
-      .fill('#0b2519')
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .fillColor('#0f2d21')
+      .text('CUSTOMER & DELIVERY DETAILS', 300, y)
+      .fontSize(9)
+      .font('Helvetica')
+      .fillColor('#475569')
+      .text(`Customer: ${recipientName}`, 300, y + 18)
+      .text(`Email: ${order.user?.email || 'N/A'}`, 300, y + 33)
+      .text(`Phone: ${recipientPhone}`, 300, y + 48)
+      .text(`Address: ${addressStr}`, 300, y + 63, { width: 250, height: 36, ellipsis: true });
+
+    y += 110;
+
+    // ITEMS TABLE — dark green header
+    doc
+      .rect(40, y, 515, 26)
+      .fill('#0f2d21')
       .fillColor('#ffffff')
       .font('Helvetica-Bold')
       .fontSize(9)
-      .text('PLANT SPECIMEN / PRODUCT DESCRIPTION', 35, y + 8)
-      .text('QTY', 350, y + 8, { width: 40, align: 'center' })
-      .text('UNIT PRICE', 400, y + 8, { width: 75, align: 'right' })
-      .text('TOTAL', 485, y + 8, { width: 75, align: 'right' });
+      .text('ITEM DESCRIPTION', 50, y + 8)
+      .text('QTY', 350, y + 8, { width: 50, align: 'center' })
+      .text('UNIT PRICE', 405, y + 8, { width: 70, align: 'right' })
+      .text('LINE TOTAL', 482, y + 8, { width: 68, align: 'right' });
 
     y += 26;
 
-    // Items Table Rows
     const items = order.items || [];
     items.forEach((item: any, idx: number) => {
       const isEven = idx % 2 === 0;
-      doc
-        .rect(25, y, 545, 24)
-        .fillAndStroke(isEven ? '#ffffff' : '#f8fafc', '#f1f5f9');
+      if (isEven) {
+        doc.rect(40, y, 515, 22).fill('#f8fafc');
+      }
 
-      const name = item.productNameSnapshot || item.product?.name || 'Botanical Specimen';
+      const name = item.productNameSnapshot || item.product?.name || 'Plant';
       const qty = item.quantity || 1;
       const price = item.priceSnapshot || item.price || 0;
       const lineTotal = item.subtotal || qty * price;
 
       doc
-        .fillColor('#0f172a')
+        .fillColor('#1e293b')
         .font('Helvetica')
         .fontSize(9)
-        .text(name, 35, y + 7, { width: 300, height: 14, ellipsis: true })
-        .text(String(qty), 350, y + 7, { width: 40, align: 'center' })
-        .text(this.formatCurrency(price), 400, y + 7, { width: 75, align: 'right' })
-        .font('Helvetica-Bold')
-        .text(this.formatCurrency(lineTotal), 485, y + 7, { width: 75, align: 'right' });
+        .text(name, 50, y + 6, { width: 290, height: 14, ellipsis: true })
+        .text(String(qty), 350, y + 6, { width: 50, align: 'center' })
+        .text(this.formatCurrency(price), 405, y + 6, { width: 70, align: 'right' })
+        .text(this.formatCurrency(lineTotal), 482, y + 6, { width: 68, align: 'right' });
 
-      y += 24;
+      y += 22;
     });
 
-    // Summary Box
-    y += 12;
+    // Divider under rows
+    doc
+      .moveTo(40, y + 6)
+      .lineTo(555, y + 6)
+      .strokeColor('#cbd5e1')
+      .lineWidth(0.8)
+      .stroke();
+
+    y += 20;
+
+    // TOTALS
     const subtotal = order.subtotal || items.reduce((sum: number, i: any) => sum + (i.subtotal || (i.priceSnapshot * i.quantity)), 0);
     const deliveryFee = order.deliveryFee || 0;
     const total = order.total || subtotal + deliveryFee;
 
-    // Subtotal Row
     doc
       .font('Helvetica')
       .fontSize(9)
@@ -172,50 +164,46 @@ export class PDFService {
       .text('Subtotal:', 380, y, { width: 90, align: 'right' })
       .font('Helvetica-Bold')
       .fillColor('#0f172a')
-      .text(this.formatCurrency(subtotal), 480, y, { width: 80, align: 'right' });
+      .text(this.formatCurrency(subtotal), 478, y, { width: 72, align: 'right' });
 
-    y += 18;
+    y += 16;
 
-    // Delivery Fee Row
     doc
       .font('Helvetica')
       .fillColor('#475569')
-      .text('Delivery & Handling:', 360, y, { width: 110, align: 'right' })
+      .text('Delivery Fee:', 380, y, { width: 90, align: 'right' })
       .font('Helvetica-Bold')
-      .fillColor('#15803d')
-      .text(deliveryFee === 0 ? 'FREE DELIVERY' : this.formatCurrency(deliveryFee), 480, y, { width: 80, align: 'right' });
+      .fillColor('#0f172a')
+      .text(deliveryFee === 0 ? 'FREE' : this.formatCurrency(deliveryFee), 478, y, { width: 72, align: 'right' });
 
-    y += 22;
+    y += 20;
 
-    // Grand Total Highlight Pill
+    // Total row — light green background
     doc
-      .rect(350, y - 4, 220, 32)
-      .fillAndStroke('#0b2519', '#b45309')
-      .fillColor('#ffffff')
-      .font('Helvetica-Bold')
-      .fontSize(11)
-      .text('TOTAL AMOUNT:', 360, y + 6, { width: 100, align: 'right' })
-      .fillColor('#fef08a')
-      .fontSize(12)
-      .text(this.formatCurrency(total), 470, y + 5, { width: 90, align: 'right' });
-
-    // Premium Terms & Watermark Banner
-    doc
-      .rect(25, 765, 545, 45)
-      .fill('#f0fdf4');
-
-    doc
+      .rect(350, y - 4, 205, 28)
+      .fill('#f0fdf4')
       .fillColor('#166534')
-      .fontSize(9)
       .font('Helvetica-Bold')
-      .text('THANK YOU FOR YOUR PURCHASE FROM SHEENEEKA NURSERY!', 35, 775, { align: 'center', width: 525 })
+      .fontSize(10)
+      .text('TOTAL AMOUNT:', 358, y + 4, { width: 110, align: 'right' })
+      .fontSize(11)
+      .fillColor('#14532d')
+      .text(this.formatCurrency(total), 478, y + 3, { width: 72, align: 'right' });
+
+    // Footer
+    doc
       .fontSize(8)
-      .font('Helvetica')
-      .fillColor('#334155')
-      .text('For plant care tips, order inquiries, or assistance contact us at support@sheeneekanursery.in | Ph: +91 81231 91863', 35, 792, { align: 'center', width: 525 });
+      .font('Helvetica-Oblique')
+      .fillColor('#64748b')
+      .text(
+        'Thank you for choosing Sheeneeka Nursery! For queries, contact support at +91 81231 91863.',
+        40, 780,
+        { align: 'center', width: 515 }
+      );
 
     return this.docToBuffer(doc);
   }
+
 
   /**
    * Generate Breathtaking Ultra-Premium Parcel Shipping Label PDF
