@@ -1471,19 +1471,38 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
 
+              {formMsg && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-600" />
+                  <span>{formMsg}</span>
+                </div>
+              )}
+
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
                   type="button"
+                  disabled={createProductMutation.isPending}
                   onClick={() => setShowAddProductModal(false)}
-                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 font-semibold cursor-pointer"
+                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 font-semibold cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-full bg-[#386641] text-white font-semibold hover:bg-[#2d5234] cursor-pointer"
+                  disabled={createProductMutation.isPending || imageUploading}
+                  className="px-6 py-2.5 rounded-full bg-[#386641] text-white font-semibold hover:bg-[#2d5234] cursor-pointer flex items-center gap-2 disabled:opacity-60"
                 >
-                  Save Product Specimen
+                  {createProductMutation.isPending ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      <span>Uploading &amp; Publishing to Store...</span>
+                    </>
+                  ) : (
+                    <span>Save Product Specimen</span>
+                  )}
                 </button>
               </div>
             </form>
