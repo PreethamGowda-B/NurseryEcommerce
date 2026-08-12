@@ -196,6 +196,19 @@ export const AdminPage: React.FC = () => {
     refetchInterval: 60000,
   });
 
+  // 5. Fetch Categories
+  const { data: categoriesData } = useQuery({
+    queryKey: ['adminCategories'],
+    queryFn: async () => {
+      const res = await api.get('/categories');
+      const list = res.data?.data?.categories || res.data?.data || res.data?.categories || res.data;
+      return Array.isArray(list) ? list : [];
+    },
+    enabled: isAdmin,
+  });
+
+  const categoriesList: any[] = Array.isArray(categoriesData) ? categoriesData : [];
+
   // Real-time SSE listener
   useAdminSSE(() => {
     refetchOrders();
@@ -1257,12 +1270,22 @@ export const AdminPage: React.FC = () => {
                     onChange={(e) => setNewProdCategory(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                   >
-                    <option value="cat-indoor">Indoor Plants</option>
-                    <option value="cat-outdoor">Outdoor Plants &amp; Palms</option>
-                    <option value="cat-flowering">Flowering Plants</option>
-                    <option value="cat-fruit">Fruit &amp; Exotic Plants</option>
-                    <option value="cat-vegetable">Vegetables &amp; Herbs</option>
-                    <option value="cat-pots">Pots, Planters &amp; Soil</option>
+                    {categoriesList.length > 0 ? (
+                      categoriesList.map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="cat-indoor">Indoor Plants</option>
+                        <option value="cat-outdoor">Outdoor Plants &amp; Palms</option>
+                        <option value="cat-flowering">Flowering Plants</option>
+                        <option value="cat-fruit">Fruit &amp; Exotic Plants</option>
+                        <option value="cat-vegetable">Vegetables &amp; Herbs</option>
+                        <option value="cat-pots">Pots, Planters &amp; Soil</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
