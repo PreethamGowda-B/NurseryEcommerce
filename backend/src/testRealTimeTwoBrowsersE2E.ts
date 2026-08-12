@@ -69,7 +69,7 @@ async function runTwoBrowserRealTimeAcceptanceTest() {
     await new Promise((r) => setTimeout(r, 2000));
 
     const cartCountText = await pageCustomer.evaluate(() => {
-      const el = document.querySelector('a[href="/cart"]');
+      const el = (globalThis as any).document?.querySelector('a[href="/cart"]');
       return el ? el.textContent : '';
     });
 

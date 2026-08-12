@@ -87,12 +87,12 @@ export const createApp = (): Express => {
   app.use('/api/sse', sseRouter);
 
   // Admin Routes
-  app.use('/api/admin', adminProductsRouter);
-  app.use('/api/admin', adminCategoriesRouter);
-  app.use('/api/admin', adminDashboardRouter);
-  app.use('/api/admin', adminOrdersRouter);
-  app.use('/api/admin', adminInventoryRouter);
-  app.use('/api/admin', adminUsersRouter);
+  app.use('/api', adminProductsRouter);
+  app.use('/api', adminCategoriesRouter);
+  app.use('/api', adminDashboardRouter);
+  app.use('/api', adminOrdersRouter);
+  app.use('/api', adminInventoryRouter);
+  app.use('/api', adminUsersRouter);
 
   // 404 Handler
   app.use((req, _res, next) => {
