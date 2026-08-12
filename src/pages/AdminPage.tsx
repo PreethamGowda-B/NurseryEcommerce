@@ -151,28 +151,28 @@ export const AdminPage: React.FC = () => {
   });
 
   // Pure DB array normalization (ZERO SAMPLE FALLBACKS)
-  const ordersList: any[] = Array.isArray(ordersData)
-    ? ordersData
-    : Array.isArray(ordersData?.data)
+  const ordersList: any[] = Array.isArray(ordersData?.data)
     ? ordersData.data
     : Array.isArray(ordersData?.orders)
     ? ordersData.orders
+    : Array.isArray(ordersData)
+    ? ordersData
     : [];
 
-  const productsList: any[] = Array.isArray(productsData)
-    ? productsData
+  const productsList: any[] = Array.isArray(productsData?.products)
+    ? productsData.products
     : Array.isArray(productsData?.data)
     ? productsData.data
-    : Array.isArray(productsData?.products)
-    ? productsData.products
+    : Array.isArray(productsData)
+    ? productsData
     : [];
 
-  const usersList: any[] = Array.isArray(usersData)
-    ? usersData
-    : Array.isArray(usersData?.users)
+  const usersList: any[] = Array.isArray(usersData?.users)
     ? usersData.users
     : Array.isArray(usersData?.data)
     ? usersData.data
+    : Array.isArray(usersData)
+    ? usersData
     : [];
 
   // Order Status Update Mutation
