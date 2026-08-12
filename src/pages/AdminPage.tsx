@@ -110,7 +110,8 @@ export const AdminPage: React.FC = () => {
       if (orderSearch) params.append('search', orderSearch);
       params.append('limit', '100');
       const res = await api.get(`/admin/orders?${params.toString()}`);
-      return res.data?.data || res.data;
+      const list = res.data?.data?.data || res.data?.data || res.data?.orders || res.data;
+      return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
     refetchInterval: 5000,
@@ -124,7 +125,8 @@ export const AdminPage: React.FC = () => {
       if (productSearch) params.append('search', productSearch);
       params.append('limit', '100');
       const res = await api.get(`/admin/products?${params.toString()}`);
-      return res.data?.data || res.data;
+      const list = res.data?.data?.products || res.data?.data || res.data?.products || res.data;
+      return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
     refetchInterval: 5000,
@@ -137,7 +139,8 @@ export const AdminPage: React.FC = () => {
       const params = new URLSearchParams();
       if (userSearch) params.append('search', userSearch);
       const res = await api.get(`/admin/users?${params.toString()}`);
-      return res.data?.data || res.data;
+      const list = res.data?.data?.users || res.data?.data || res.data?.users || res.data;
+      return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
     refetchInterval: 10000,
@@ -151,29 +154,9 @@ export const AdminPage: React.FC = () => {
   });
 
   // Pure DB array normalization (ZERO SAMPLE FALLBACKS)
-  const ordersList: any[] = Array.isArray(ordersData?.data)
-    ? ordersData.data
-    : Array.isArray(ordersData?.orders)
-    ? ordersData.orders
-    : Array.isArray(ordersData)
-    ? ordersData
-    : [];
-
-  const productsList: any[] = Array.isArray(productsData?.products)
-    ? productsData.products
-    : Array.isArray(productsData?.data)
-    ? productsData.data
-    : Array.isArray(productsData)
-    ? productsData
-    : [];
-
-  const usersList: any[] = Array.isArray(usersData?.users)
-    ? usersData.users
-    : Array.isArray(usersData?.data)
-    ? usersData.data
-    : Array.isArray(usersData)
-    ? usersData
-    : [];
+  const ordersList: any[] = Array.isArray(ordersData) ? ordersData : [];
+  const productsList: any[] = Array.isArray(productsData) ? productsData : [];
+  const usersList: any[] = Array.isArray(usersData) ? usersData : [];
 
   // Order Status Update Mutation
   const updateStatusMutation = useMutation({
