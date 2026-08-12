@@ -10,6 +10,7 @@ import cartRouter from './routes/cart.js';
 import accountRouter from './routes/account.js';
 import orderRouter from './routes/orders.js';
 import paymentRouter from './routes/payments.js';
+import sseRouter from './routes/sse.js';
 import adminProductsRouter from './routes/admin/products.js';
 import adminCategoriesRouter from './routes/admin/categories.js';
 import adminDashboardRouter from './routes/admin/dashboard.js';
@@ -83,6 +84,7 @@ export const createApp = (): Express => {
   app.use('/api', accountRouter);
   app.use('/api', orderRouter);
   app.use('/api', paymentRouter);
+  app.use('/api/sse', sseRouter);
 
   // Admin Routes
   app.use('/api/admin', adminProductsRouter);

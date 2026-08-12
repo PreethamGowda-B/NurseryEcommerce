@@ -12,17 +12,29 @@ import {
   LogOut,
   Menu,
   X,
-  ShieldAlert,
+  Bell,
+  CheckCircle2,
   Leaf,
+  ShieldAlert,
 } from 'lucide-react';
 import { useAdminUser, useAdminLogout } from '../hooks/useAdminAuth';
+import { useAdminSSE } from '../hooks/useAdminSSE';
 
 export const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [newOrderToast, setNewOrderToast] = useState<any | null>(null);
   const { data: user, isLoading } = useAdminUser();
   const logoutMutation = useAdminLogout();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Listen for real-time SSE order creation events
+  useAdminSSE((orderData) => {
+    setNewOrderToast(orderData);
+    setTimeout(() => {
+      setNewOrderToast(null);
+    }, 8000);
+  });
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -172,6 +184,30 @@ export const AdminLayout: React.FC = () => {
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Backend Operational" />
           </div>
         </header>
+
+        {/* Real-time SSE Incoming Order Toast Banner */}
+        {newOrderToast && (
+          <div className="bg-emerald-600 text-white px-6 py-3 shadow-lg flex items-center justify-between animate-bounce">
+            <div className="flex items-center gap-3 text-xs">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+                🔔
+              </div>
+              <div>
+                <span className="font-bold text-sm block">NEW CUSTOMER ORDER RECEIVED (REAL-TIME SSE)</span>
+                <span className="font-mono text-emerald-100">
+                  Order #{newOrderToast.orderNumber} • Customer: {newOrderToast.customerName} • Total: ₹{newOrderToast.total} ({newOrderToast.paymentMethod})
+                </span>
+              </div>
+            </div>
+            <Link
+              to="/orders"
+              onClick={() => setNewOrderToast(null)}
+              className="px-4 py-1.5 rounded-lg bg-white text-emerald-900 font-bold text-xs hover:bg-emerald-50 transition-colors"
+            >
+              View Order Details
+            </Link>
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto">

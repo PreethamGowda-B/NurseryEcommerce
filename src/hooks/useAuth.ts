@@ -54,7 +54,12 @@ export function useLogin() {
 
       if (guestItems.length > 0) {
         try {
-          await api.post('/cart/merge', { items: guestItems });
+          const mergeRes = await api.post('/cart/merge', { items: guestItems });
+          const unavail = mergeRes.data?.data?.unavailableItems || [];
+          if (unavail.length > 0) {
+            const names = unavail.map((u: any) => `${u.name} (${u.reason})`).join(', ');
+            alert(`Note: Some items from your guest cart could not be added: ${names}`);
+          }
           useCartStore.getState().clearCart();
         } catch (err) {
           console.error('Failed to merge guest cart into backend:', err);
@@ -92,7 +97,12 @@ export function useRegister() {
 
       if (guestItems.length > 0) {
         try {
-          await api.post('/cart/merge', { items: guestItems });
+          const mergeRes = await api.post('/cart/merge', { items: guestItems });
+          const unavail = mergeRes.data?.data?.unavailableItems || [];
+          if (unavail.length > 0) {
+            const names = unavail.map((u: any) => `${u.name} (${u.reason})`).join(', ');
+            alert(`Note: Some items from your guest cart could not be added: ${names}`);
+          }
           useCartStore.getState().clearCart();
         } catch (err) {
           console.error('Failed to merge guest cart into backend:', err);

@@ -298,11 +298,14 @@ export class CartService {
   }
 
   /**
-   * Merge guest local storage items into user's database cart upon login
+   * Merge guest local storage items into user's database cart upon login with explicit unavailable item tracking
    */
   static async mergeGuestCart(userId: string, guestItems: { productId: string; quantity: number }[]) {
+    const unavailableItems: { productId: string; name: string; reason: string }[] = [];
+
     if (!guestItems || guestItems.length === 0) {
-      return this.getFormattedCart(userId);
+      const formatted = await this.getFormattedCart(userId);
+      return { ...formatted, unavailableItems };
     }
 
     const cart = await this.getOrCreateCart(userId);
@@ -314,8 +317,19 @@ export class CartService {
         },
       });
 
-      // Skip invalid or unpublished products
-      if (!product || !product.published || product.stockQuantity < 1) {
+      // Track & report invalid, unpublished or out-of-stock items explicitly
+      if (!product) {
+        unavailableItems.push({ productId: gItem.productId, name: 'Plant Specimen', reason: 'Product no longer available' });
+        continue;
+      }
+
+      if (!product.published) {
+        unavailableItems.push({ productId: product.id, name: product.name, reason: 'Currently unavailable' });
+        continue;
+      }
+
+      if (product.stockQuantity < 1) {
+        unavailableItems.push({ productId: product.id, name: product.name, reason: 'Out of stock' });
         continue;
       }
 
@@ -349,6 +363,10 @@ export class CartService {
       }
     }
 
-    return this.getFormattedCart(userId);
+    const formattedCart = await this.getFormattedCart(userId);
+    return {
+      ...formattedCart,
+      unavailableItems,
+    };
   }
 }

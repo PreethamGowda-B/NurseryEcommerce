@@ -1,6 +1,7 @@
 import prisma from '../db/client.js';
 import { NotFoundError, BadRequestError, ConflictError } from '../utils/errors.js';
 import { AuditService } from './auditService.js';
+import { sseService } from './sseService.js';
 
 export interface ListAdminOrdersParams {
   page?: number;
@@ -326,7 +327,17 @@ export class AdminOrderService {
       ipAddress,
     });
 
-    return this.getOrder(orderNumber);
+    const updatedOrder = await this.getOrder(orderNumber);
+
+    // Broadcast SSE real-time event ONLY AFTER DB commit completes
+    sseService.notifyOrderStatusUpdated(
+      orderNumber,
+      nextStatus,
+      order.userId,
+      updatedOrder.statusHistory?.[0]
+    );
+
+    return updatedOrder;
   }
 
   /**

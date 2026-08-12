@@ -1,5 +1,6 @@
 import prisma from '../db/client.js';
 import { NotFoundError, BadRequestError, ConflictError } from '../utils/errors.js';
+import { sseService } from './sseService.js';
 
 export const DELIVERY_FEE = 99;
 export const FREE_DELIVERY_THRESHOLD = 999;
@@ -9,7 +10,7 @@ export class OrderService {
    * Production-grade transactional order creation
    */
   static async createOrder(userId: string, addressId: string) {
-    return prisma.$transaction(async (tx) => {
+    const createdOrder = await prisma.$transaction(async (tx) => {
       // 1. Verify shipping address ownership (IDOR defense)
       const address = await tx.address.findFirst({
         where: { id: addressId, userId },
@@ -138,6 +139,11 @@ export class OrderService {
         shippingAddress: JSON.parse(order.shippingAddressSnapshot),
       };
     });
+
+    // Broadcast real-time SSE event to all authorized Admin streams ONLY AFTER DB commit
+    sseService.notifyOrderCreated(createdOrder);
+
+    return createdOrder;
   }
 
   /**

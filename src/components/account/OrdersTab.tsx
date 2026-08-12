@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCustomerOrders, CustomerOrder } from '../../hooks/useOrders';
+import { useCustomerSSE } from '../../hooks/useCustomerSSE';
 import { Package, Clock, MapPin, Eye, X, ArrowRight, CheckCircle2, Truck, ShieldCheck, Search, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -7,6 +8,11 @@ export const OrdersTab: React.FC = () => {
   const { data: orders, isLoading, isError } = useCustomerOrders();
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
   const [searchTrackNumber, setSearchTrackNumber] = useState('');
+
+  // Real-time SSE Live Order Status Tracking Listener
+  useCustomerSSE(() => {
+    // Automatically refetches customer orders when admin changes status
+  });
 
   if (isLoading) {
     return <div className="p-8 text-center text-xs text-slate-500 animate-pulse">Loading live order history...</div>;
