@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.112.3",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
@@ -27,6 +28,7 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
     "pdfkit": "^0.19.1",
     "razorpay": "^2.9.8",
     "winston": "^3.17.0",
@@ -37,6 +39,7 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/multer": "^2.2.0",
     "@types/node": "^22.13.4",
     "@types/pdfkit": "^0.17.6",
     "prisma": "^5.22.0",

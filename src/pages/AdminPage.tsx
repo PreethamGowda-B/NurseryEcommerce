@@ -90,6 +90,8 @@ export const AdminPage: React.FC = () => {
   const [newProdCategory, setNewProdCategory] = useState('cat-indoor');
   const [newProdDesc, setNewProdDesc] = useState('');
   const [newProdImage, setNewProdImage] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formMsg, setFormMsg] = useState<string | null>(null);
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const [isDownloadingLabel, setIsDownloadingLabel] = useState(false);
@@ -303,6 +305,7 @@ export const AdminPage: React.FC = () => {
       setNewProdSalePrice('');
       setNewProdDesc('');
       setNewProdImage('');
+      setImagePreview(null);
     },
   });
 
@@ -1265,14 +1268,86 @@ export const AdminPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Image URL</label>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/..."
-                  value={newProdImage}
-                  onChange={(e) => setNewProdImage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
-                />
+                <label className="block font-semibold text-slate-700 mb-1">Product Image</label>
+
+                {/* File Picker */}
+                <label
+                  htmlFor="prod-img-upload"
+                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                    imageUploading
+                      ? 'border-emerald-300 bg-emerald-50'
+                      : 'border-emerald-900/20 bg-slate-50 hover:border-[#386641] hover:bg-emerald-50/40'
+                  }`}
+                >
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Preview" className="h-full w-full object-cover rounded-xl" />
+                  ) : imageUploading ? (
+                    <div className="flex flex-col items-center gap-2 text-emerald-700">
+                      <svg className="animate-spin w-6 h-6" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                      <span className="text-xs font-medium">Uploading...</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1.5 text-slate-400">
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-xs font-medium">Click to upload image</span>
+                      <span className="text-[10px]">PNG, JPG, WEBP up to 5MB</span>
+                    </div>
+                  )}
+                  <input
+                    id="prod-img-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={imageUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      // Show local preview instantly
+                      setImagePreview(URL.createObjectURL(file));
+                      setImageUploading(true);
+                      try {
+                        const token = localStorage.getItem('auth_token');
+                        const formData = new FormData();
+                        formData.append('image', file);
+                        const res = await fetch('https://sheeneeka-nursery-api.onrender.com/api/admin/upload', {
+                          method: 'POST',
+                          headers: { Authorization: `Bearer ${token}` },
+                          body: formData,
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || 'Upload failed');
+                        setNewProdImage(data.data?.url || data.url || '');
+                        setFormMsg(null);
+                      } catch (err: any) {
+                        setImagePreview(null);
+                        setNewProdImage('');
+                        setFormMsg('Image upload failed: ' + err.message);
+                      } finally {
+                        setImageUploading(false);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                </label>
+
+                {/* Show uploaded URL or allow manual URL fallback */}
+                {newProdImage && (
+                  <p className="text-[10px] text-emerald-700 mt-1 font-medium truncate">Uploaded: {newProdImage}</p>
+                )}
+                {!newProdImage && (
+                  <input
+                    type="url"
+                    placeholder="Or paste image URL directly..."
+                    value={newProdImage}
+                    onChange={(e) => { setNewProdImage(e.target.value); setImagePreview(e.target.value || null); }}
+                    className="w-full mt-2 px-3.5 py-2 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
+                  />
+                )}
               </div>
 
               <div>

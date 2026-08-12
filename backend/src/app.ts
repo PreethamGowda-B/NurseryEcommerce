@@ -17,6 +17,7 @@ import adminDashboardRouter from './routes/admin/dashboard.js';
 import adminOrdersRouter from './routes/admin/orders.js';
 import adminInventoryRouter from './routes/admin/inventory.js';
 import adminUsersRouter from './routes/admin/users.js';
+import adminUploadRouter from './routes/admin/upload.js';
 import { globalLimiter } from './middleware/rateLimit.js';
 import { errorHandler } from './middleware/error.js';
 import { NotFoundError } from './utils/errors.js';
@@ -97,6 +98,7 @@ export const createApp = (): Express => {
   app.use('/api', adminOrdersRouter);
   app.use('/api', adminInventoryRouter);
   app.use('/api', adminUsersRouter);
+  app.use('/api', adminUploadRouter);
 
   // 404 Handler
   app.use((req, _res, next) => {
