@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useUser, useLogout } from '../hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
-import { useCustomerSSE } from '../hooks/useCustomerSSE';
+import { useAdminSSE } from '../hooks/useAdminSSE';
 import {
   LayoutDashboard,
   Package,
@@ -147,7 +147,7 @@ export const AdminPage: React.FC = () => {
   });
 
   // Real-time SSE listener
-  useCustomerSSE(() => {
+  useAdminSSE(() => {
     refetchOrders();
     refetchStats();
     refetchProducts();
