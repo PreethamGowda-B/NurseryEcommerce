@@ -155,48 +155,42 @@ export const AdminPage: React.FC = () => {
     refetchInterval: 30000,
   });
 
-  // 2. Fetch Orders (REAL SUPABASE DB DATA)
+  // 2. Fetch ALL Orders once — filter purely client-side for instant results
   const { data: ordersData, isLoading: ordersLoading, refetch: refetchOrders } = useQuery({
-    queryKey: ['adminOrders', orderStatusFilter, orderSearch],
+    queryKey: ['adminOrders'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (orderStatusFilter !== 'ALL') params.append('status', orderStatusFilter);
-      if (orderSearch) params.append('search', orderSearch);
-      params.append('limit', '100');
-      const res = await api.get(`/admin/orders?${params.toString()}`);
+      const res = await api.get('/admin/orders?limit=200');
       const list = res.data?.data?.data || res.data?.data || res.data?.orders || res.data;
       return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
+    staleTime: 1000 * 30,
     refetchInterval: 30000,
   });
 
-  // 3. Fetch Products (REAL SUPABASE DB DATA)
+  // 3. Fetch ALL Products once — filter purely client-side
   const { data: productsData, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
-    queryKey: ['adminProducts', productSearch],
+    queryKey: ['adminProducts'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (productSearch) params.append('search', productSearch);
-      params.append('limit', '100');
-      const res = await api.get(`/admin/products?${params.toString()}`);
+      const res = await api.get('/admin/products?limit=200');
       const list = res.data?.data?.products || res.data?.data || res.data?.products || res.data;
       return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
+    staleTime: 1000 * 30,
     refetchInterval: 30000,
   });
 
-  // 4. Fetch Users (REAL SUPABASE DB DATA)
+  // 4. Fetch ALL Users once — filter purely client-side
   const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery({
-    queryKey: ['adminUsers', userSearch],
+    queryKey: ['adminUsers'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (userSearch) params.append('search', userSearch);
-      const res = await api.get(`/admin/users?${params.toString()}`);
+      const res = await api.get('/admin/users?limit=200');
       const list = res.data?.data?.users || res.data?.data || res.data?.users || res.data;
       return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
+    staleTime: 1000 * 60,
     refetchInterval: 60000,
   });
 
