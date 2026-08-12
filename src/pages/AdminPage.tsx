@@ -398,16 +398,11 @@ export const AdminPage: React.FC = () => {
               You must be logged in as an authorized Sheeneeka Nursery Super Administrator to access this management console.
             </p>
           </div>
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-left space-y-2">
-            <p className="font-bold text-[#0f2d21]">Super Admin Seed Credentials:</p>
-            <p className="font-mono text-slate-600 select-all">Email: admin@sheeneekanursery.in</p>
-            <p className="font-mono text-slate-600 select-all">Password: Admin@Sheeneeka2026!</p>
-          </div>
           <Link
-            to="/login?redirect=/admin"
+            to="/admin/login"
             className="w-full py-3.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-natural transition-all"
           >
-            <span>Log In to Super Admin Console</span>
+            <span>Go to Admin Portal Login</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

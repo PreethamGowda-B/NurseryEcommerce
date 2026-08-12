@@ -118,21 +118,12 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="pt-3 border-t border-emerald-900/10 space-y-2">
-            <button
-              type="button"
-              onClick={fillAdminCredentials}
-              className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-emerald-50 border border-slate-200 text-[#386641] font-semibold text-[11px] transition-colors"
-            >
-              🔑 Fill Admin Demo Credentials
-            </button>
-            <p className="text-xs text-slate-500">
-              Don't have an account?{' '}
-              <Link to={registerLink} className="font-semibold text-[#386641] hover:underline">
-                Create Account
-              </Link>
-            </p>
-          </div>
+          <p className="text-xs text-slate-500 pt-3 border-t border-emerald-900/10">
+            Don't have an account?{' '}
+            <Link to={registerLink} className="font-semibold text-[#386641] hover:underline">
+              Create Account
+            </Link>
+          </p>
         </div>
       </div>
       <FinalCTA />

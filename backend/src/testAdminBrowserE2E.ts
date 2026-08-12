@@ -23,22 +23,18 @@ async function runAdminBrowserE2E() {
   const page = await browser.newPage();
 
   try {
-    // 1. Open Login Page
-    console.log('1️⃣ Navigating to /login...');
-    await page.goto('https://nursery-ecommerce.vercel.app/login', { waitUntil: 'networkidle2', timeout: 30000 });
+    // 1. Open Dedicated Admin Login Page
+    console.log('1️⃣ Navigating to /admin/login...');
+    await page.goto('https://nursery-ecommerce.vercel.app/admin/login', { waitUntil: 'networkidle2', timeout: 30000 });
     await new Promise((r) => setTimeout(r, 2000));
 
-    // 2. Click 'Fill Admin Demo Credentials'
-    console.log('2️⃣ Filling Admin Credentials...');
-    const buttons = await page.$$('button');
-    for (const b of buttons) {
-      const text = await page.evaluate((el) => el.textContent, b);
-      if (text && text.includes('Fill Admin Demo Credentials')) {
-        await b.click();
-        console.log('   Clicked Fill Admin Demo Credentials button!');
-        break;
-      }
-    }
+    // 2. Fill Admin Credentials
+    console.log('2️⃣ Typing Super Admin Credentials...');
+    const emailInp = await page.$('input[type="email"]');
+    if (emailInp) await emailInp.type('admin@sheeneekanursery.in');
+
+    const passInp = await page.$('input[type="password"]');
+    if (passInp) await passInp.type('Admin@Sheeneeka2026!');
 
     const screenshotAdmin1 = path.join(ARTIFACTS_DIR, 'admin_01_login_filled.png');
     await page.screenshot({ path: screenshotAdmin1 });
