@@ -43,6 +43,10 @@ const isAllowedOrigin = (origin: string): boolean => {
 export const createApp = (): Express => {
   const app = express();
 
+  // Trust Render/Heroku/Vercel reverse proxy — required for express-rate-limit
+  // to correctly identify real client IPs from X-Forwarded-For headers
+  app.set('trust proxy', 1);
+
   // Security headers
   app.use(
     helmet({
