@@ -312,8 +312,8 @@ export class AdminOrderService {
       }
     });
 
-    // Audit Log outside transaction
-    await AuditService.log({
+    // Non-blocking background Audit Log
+    AuditService.log({
       adminId,
       action: nextStatus === 'CANCELLED' ? 'ORDER_CANCELLED' : 'ORDER_STATUS_UPDATED',
       entity: 'Order',
@@ -326,7 +326,7 @@ export class AdminOrderService {
         internalNotes,
       },
       ipAddress,
-    });
+    }).catch((err) => console.error('Audit log background error:', err));
 
     const updatedOrder = await this.getOrder(orderNumber);
 

@@ -152,7 +152,7 @@ export const AdminPage: React.FC = () => {
       return res.data?.data || res.data;
     },
     enabled: isAdmin,
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   // 2. Fetch Orders (REAL SUPABASE DB DATA)
@@ -168,7 +168,7 @@ export const AdminPage: React.FC = () => {
       return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   // 3. Fetch Products (REAL SUPABASE DB DATA)
@@ -183,7 +183,7 @@ export const AdminPage: React.FC = () => {
       return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   // 4. Fetch Users (REAL SUPABASE DB DATA)
@@ -197,7 +197,7 @@ export const AdminPage: React.FC = () => {
       return Array.isArray(list) ? list : [];
     },
     enabled: isAdmin,
-    refetchInterval: 10000,
+    refetchInterval: 60000,
   });
 
   // Real-time SSE listener
@@ -240,7 +240,7 @@ export const AdminPage: React.FC = () => {
     return u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.phone?.toLowerCase().includes(q);
   });
 
-  // Order Status Update Mutation
+  // Order Status Update Mutation (INSTANT OPTIMISTIC UI UPDATES)
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderNumber, status }: { orderNumber: string; status: string }) => {
       setUpdatingOrderNumber(orderNumber);
@@ -249,6 +249,18 @@ export const AdminPage: React.FC = () => {
         note: `Status updated to ${status} by super admin`,
       });
       return res.data;
+    },
+    onMutate: async ({ orderNumber, status }) => {
+      // Optimistically update React Query cache for instant 0ms UI transition!
+      queryClient.setQueriesData({ queryKey: ['adminOrders'] }, (oldData: any) => {
+        if (!Array.isArray(oldData)) return oldData;
+        return oldData.map((ord: any) =>
+          ord.orderNumber === orderNumber ? { ...ord, status } : ord
+        );
+      });
+      if (selectedOrder && selectedOrder.orderNumber === orderNumber) {
+        setSelectedOrder((prev: any) => (prev ? { ...prev, status } : prev));
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
