@@ -280,7 +280,7 @@ export class PDFService {
       .fontSize(10)
       .font('Helvetica-Bold')
       .fillColor('#0b2519')
-      .text('📍 SHIP TO / DELIVERY RECIPIENT DESTINATION', 45, y + 7);
+      .text('SHIP TO / DELIVERY RECIPIENT DESTINATION', 45, y + 7);
 
     doc
       .fontSize(8.5)
@@ -308,7 +308,7 @@ export class PDFService {
       .fillColor('#166534')
       .fontSize(12)
       .font('Helvetica-Bold')
-      .text(`📞 CONTACT: ${phone}`, 55, y + 4);
+      .text(`TEL: ${phone}`, 55, y + 4);
 
     y += 32;
 
@@ -347,7 +347,7 @@ export class PDFService {
         .fillColor('#78350f')
         .fontSize(14)
         .font('Helvetica-Bold')
-        .text(`💰 CASH ON DELIVERY (COD) — COLLECT CASH AMOUNT: ${this.formatCurrency(order.total || 0)}`, 55, y + 15, { width: 485, align: 'center' });
+        .text(`** CASH ON DELIVERY (COD) ** COLLECT: ${this.formatCurrency(order.total || 0)}`, 55, y + 15, { width: 485, align: 'center' });
     } else {
       doc
         .rect(45, y, 505, 45)
@@ -355,7 +355,7 @@ export class PDFService {
         .fillColor('#14532d')
         .fontSize(14)
         .font('Helvetica-Bold')
-        .text('✅ PREPAID PARCEL — DO NOT COLLECT CASH', 55, y + 15, { width: 485, align: 'center' });
+        .text('[ PREPAID ] PARCEL — DO NOT COLLECT CASH', 55, y + 15, { width: 485, align: 'center' });
     }
 
     y += 55;
@@ -369,7 +369,7 @@ export class PDFService {
       .fontSize(9)
       .font('Helvetica-Bold')
       .fillColor('#0b2519')
-      .text('🌿 PARCEL CONTENTS / SPECIMENS ENCLOSED:', 55, y + 8);
+      .text('PARCEL CONTENTS / SPECIMENS ENCLOSED:', 55, y + 8);
 
     const items = order.items || [];
     const itemNames = items.map((i: any) => `${i.productNameSnapshot || 'Plant Specimen'} (x${i.quantity})`).join(', ');
