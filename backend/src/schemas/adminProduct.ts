@@ -5,9 +5,9 @@ export const createAdminProductSchema = z.object({
     .object({
       name: z.string().trim().min(2, 'Name must be at least 2 characters').max(150),
       botanicalName: z.string().trim().optional(),
-      sku: z.string().trim().min(2, 'SKU must be at least 2 characters').max(50),
+      sku: z.string().trim().optional(),
       categoryId: z.string().trim().min(1, 'Category is required'),
-      description: z.string().trim().min(10, 'Description must be at least 10 characters'),
+      description: z.string().trim().optional(),
       shortDescription: z.string().trim().optional(),
       price: z.number().min(0, 'Price must be greater than or equal to 0'),
       salePrice: z.number().min(0, 'Sale price must be greater than or equal to 0').nullable().optional(),
@@ -19,7 +19,8 @@ export const createAdminProductSchema = z.object({
       plantSize: z.string().trim().optional(),
       featured: z.boolean().default(false),
       published: z.boolean().default(true),
-      imageUrl: z.string().trim().url('Invalid image URL').optional(),
+      imageUrl: z.string().trim().optional(),
+      images: z.array(z.object({ url: z.string(), altText: z.string().optional(), sortOrder: z.number().optional() })).optional(),
     })
     .refine(
       (data) => {

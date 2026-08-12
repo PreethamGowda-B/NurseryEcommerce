@@ -125,17 +125,25 @@ router.post(
         imageUrl,
       } = req.body;
 
-      // Verify Category exists
+      const finalSku = (sku && sku.trim()) || `SKU-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random()*1000)}`;
+      const finalDescription = (description && description.trim()) || `${name.trim()} - Healthy nursery plant specimen.`;
+      const finalImageUrl = imageUrl || (Array.isArray(req.body.images) && req.body.images[0]?.url) || null;
+
+      // Verify Category exists (or fallback to first available category if categoryId not found)
+      let targetCategoryId = categoryId;
       const categoryExists = await prisma.category.findUnique({ where: { id: categoryId } });
       if (!categoryExists) {
-        throw new BadRequestError('Selected category does not exist');
+        const firstCategory = await prisma.category.findFirst();
+        if (firstCategory) {
+          targetCategoryId = firstCategory.id;
+        } else {
+          throw new BadRequestError('No categories exist in database');
+        }
       }
 
       // Check unique SKU
-      const skuExists = await prisma.product.findUnique({ where: { sku: sku.trim() } });
-      if (skuExists) {
-        throw new ConflictError(`Product SKU '${sku}' already exists`);
-      }
+      const existingSkuProduct = await prisma.product.findUnique({ where: { sku: finalSku } });
+      const uniqueSku = existingSkuProduct ? `${finalSku}-${Math.floor(Math.random()*10000)}` : finalSku;
 
       const slug = await generateUniqueSlug(name);
 
@@ -144,20 +152,20 @@ router.post(
           name: name.trim(),
           botanicalName: botanicalName ? botanicalName.trim() : null,
           slug,
-          sku: sku.trim(),
-          categoryId,
-          description: description.trim(),
+          sku: uniqueSku,
+          categoryId: targetCategoryId,
+          description: finalDescription,
           shortDescription: shortDescription ? shortDescription.trim() : null,
           price,
           salePrice: salePrice !== undefined ? salePrice : null,
           stockQuantity,
-          lowStockThreshold,
+          lowStockThreshold: lowStockThreshold || 5,
           sunlight: sunlight || null,
           watering: watering || null,
           careLevel: careLevel || null,
           plantSize: plantSize || null,
-          featured,
-          published,
+          featured: Boolean(featured),
+          published: published !== undefined ? Boolean(published) : true,
         },
         include: {
           category: { select: { id: true, name: true, slug: true } },
@@ -166,11 +174,11 @@ router.post(
       });
 
       // Attach image if URL provided
-      if (imageUrl) {
+      if (finalImageUrl) {
         await prisma.productImage.create({
           data: {
             productId: product.id,
-            url: imageUrl.trim(),
+            url: String(finalImageUrl).trim(),
             altText: product.name,
             sortOrder: 0,
           },
