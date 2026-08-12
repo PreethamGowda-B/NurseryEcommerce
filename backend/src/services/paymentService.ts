@@ -236,13 +236,13 @@ export class PaymentService {
         },
       });
 
-      // Update Order Status
+      // Update Order Status (Starts as PENDING awaiting Admin approval)
       const updatedOrder = await tx.order.update({
         where: { id: order.id },
         data: {
           paymentMethod: 'COD',
           paymentStatus: 'PENDING',
-          status: 'CONFIRMED',
+          status: 'PENDING',
         },
         include: { items: true },
       });
@@ -251,8 +251,8 @@ export class PaymentService {
       await tx.orderStatusHistory.create({
         data: {
           orderId: order.id,
-          status: 'CONFIRMED',
-          note: 'Order confirmed with Cash on Delivery option',
+          status: 'PENDING',
+          note: 'Order placed with Cash on Delivery option (Awaiting Admin Confirmation)',
           changedBy: 'CUSTOMER',
         },
       });
