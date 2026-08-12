@@ -950,7 +950,16 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <button
-                  onClick={() => setShowAddProductModal(true)}
+                  onClick={() => {
+                    setNewProdName('');
+                    setNewProdPrice('');
+                    setNewProdSalePrice('');
+                    setNewProdDesc('');
+                    setNewProdImage('');
+                    setImagePreview(null);
+                    setFormMsg(null);
+                    setShowAddProductModal(true);
+                  }}
                   className="px-4 py-2.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs flex items-center gap-2 shadow-natural transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -1381,21 +1390,48 @@ export const AdminPage: React.FC = () => {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      // Show local preview instantly
-                      setImagePreview(URL.createObjectURL(file));
                       setImageUploading(true);
                       try {
-                        const token = localStorage.getItem('auth_token');
-                        const formData = new FormData();
-                        formData.append('image', file);
-                        const res = await fetch('https://sheeneeka-nursery-api.onrender.com/api/admin/upload', {
-                          method: 'POST',
-                          headers: { Authorization: `Bearer ${token}` },
-                          body: formData,
+                        // Compress photo client-side to lightweight ~80-150KB JPEG
+                        const compressedUrl = await new Promise<string>((resolve) => {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const img = new Image();
+                            img.onload = () => {
+                              const canvas = document.createElement('canvas');
+                              const MAX_SIZE = 1000;
+                              let width = img.width;
+                              let height = img.height;
+                              if (width > height) {
+                                if (width > MAX_SIZE) {
+                                  height = Math.round((height * MAX_SIZE) / width);
+                                  width = MAX_SIZE;
+                                }
+                              } else {
+                                if (height > MAX_SIZE) {
+                                  width = Math.round((width * MAX_SIZE) / height);
+                                  height = MAX_SIZE;
+                                }
+                              }
+                              canvas.width = width;
+                              canvas.height = height;
+                              const ctx = canvas.getContext('2d');
+                              if (ctx) {
+                                ctx.drawImage(img, 0, 0, width, height);
+                                resolve(canvas.toDataURL('image/jpeg', 0.82));
+                              } else {
+                                resolve(event.target?.result as string);
+                              }
+                            };
+                            img.onerror = () => resolve(event.target?.result as string);
+                            img.src = event.target?.result as string;
+                          };
+                          reader.onerror = () => resolve('');
+                          reader.readAsDataURL(file);
                         });
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data.message || 'Upload failed');
-                        setNewProdImage(data.data?.url || data.url || '');
+
+                        setImagePreview(compressedUrl);
+                        setNewProdImage(compressedUrl);
                         setFormMsg(null);
                       } catch (err: any) {
                         setImagePreview(null);
