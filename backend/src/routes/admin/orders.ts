@@ -9,6 +9,7 @@ import {
   updateInternalNotesSchema,
 } from '../../schemas/adminOrder.js';
 import { sendSuccess } from '../../utils/response.js';
+import { BadRequestError } from '../../utils/errors.js';
 
 const router = Router();
 
@@ -134,7 +135,65 @@ router.patch(
         internalNotes,
         req.ip
       );
-      sendSuccess(res, data, 'Internal notes updated');
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+/**
+ * GET /api/admin/orders/:orderNumber/invoice
+ * Dynamic A4 Invoice PDF generation directly from database snapshot
+ */
+router.get(
+  '/admin/orders/:orderNumber/invoice',
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const orderNumber = req.params.orderNumber as string;
+      const order = await AdminOrderService.getOrder(orderNumber);
+
+      if (order.status === 'CANCELLED') {
+        throw new BadRequestError('Invoice generation is not available for cancelled orders');
+      }
+
+      const { PDFService } = await import('../../services/pdfService.js');
+      const pdfBuffer = await PDFService.generateInvoicePDF(order);
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="Sheeneeka-Nursery-Invoice-${order.orderNumber}.pdf"`
+      );
+      res.send(pdfBuffer);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * GET /api/admin/orders/:orderNumber/shipping-label
+ * Dynamic Printable Parcel Shipping Label PDF generation
+ */
+router.get(
+  '/admin/orders/:orderNumber/shipping-label',
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const orderNumber = req.params.orderNumber as string;
+      const order = await AdminOrderService.getOrder(orderNumber);
+
+      if (order.status === 'CANCELLED') {
+        throw new BadRequestError('Shipping label generation is not available for cancelled orders');
+      }
+
+      const { PDFService } = await import('../../services/pdfService.js');
+      const pdfBuffer = await PDFService.generateShippingLabelPDF(order);
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="Sheeneeka-Nursery-Shipping-Label-${order.orderNumber}.pdf"`
+      );
+      res.send(pdfBuffer);
     } catch (err) {
       next(err);
     }

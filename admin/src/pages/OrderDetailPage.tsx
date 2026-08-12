@@ -20,6 +20,8 @@ import {
   Banknote,
   FileText,
   ShieldAlert,
+  Download,
+  Printer,
 } from 'lucide-react';
 
 const VALID_TRANSITIONS_MAP: Record<string, string[]> = {
@@ -40,6 +42,56 @@ export const OrderDetailPage: React.FC = () => {
   const [statusNote, setStatusNote] = useState<string>('');
   const [internalNotesText, setInternalNotesText] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+  const [isDownloadingLabel, setIsDownloadingLabel] = useState(false);
+
+  const handleDownloadInvoice = async (ordNum: string) => {
+    try {
+      setIsDownloadingInvoice(true);
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`https://sheeneeka-nursery-api.onrender.com/api/admin/orders/${ordNum}/invoice`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to generate invoice PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Sheeneeka-Nursery-Invoice-${ordNum}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err: any) {
+      setErrorMsg('Unable to generate invoice. Please try again.');
+    } finally {
+      setIsDownloadingInvoice(false);
+    }
+  };
+
+  const handleDownloadShippingLabel = async (ordNum: string) => {
+    try {
+      setIsDownloadingLabel(true);
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`https://sheeneeka-nursery-api.onrender.com/api/admin/orders/${ordNum}/shipping-label`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to generate shipping label PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Sheeneeka-Nursery-Shipping-Label-${ordNum}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err: any) {
+      setErrorMsg('Unable to generate shipping label. Please try again.');
+    } finally {
+      setIsDownloadingLabel(false);
+    }
+  };
 
   const { data: order, isLoading, isError } = useQuery<AdminOrderDetail>({
     queryKey: ['adminOrderDetail', orderNumber],
@@ -327,6 +379,41 @@ export const OrderDetailPage: React.FC = () => {
               </form>
             )}
           </div>
+
+          {/* ORDER ACTIONS PDF DOWNLOAD CARD */}
+          {order.status !== 'PENDING' && order.status !== 'CANCELLED' && (
+            <div className="bg-white border border-emerald-900/15 rounded-2xl p-6 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-emerald-900/10 pb-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#0f2d21]">
+                  <FileText className="w-4 h-4 text-[#386641]" />
+                  <span>ORDER ACTIONS & DOCUMENTS</span>
+                </div>
+                <span className="text-[10px] text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full font-bold">
+                  ✓ Order Confirmed
+                </span>
+              </div>
+
+              <div className="space-y-2.5">
+                <button
+                  onClick={() => handleDownloadInvoice(order.orderNumber)}
+                  disabled={isDownloadingInvoice}
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#0f2d21] hover:bg-[#1a4433] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{isDownloadingInvoice ? 'Generating Invoice PDF...' : 'Download Invoice'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleDownloadShippingLabel(order.orderNumber)}
+                  disabled={isDownloadingLabel}
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>{isDownloadingLabel ? 'Generating Shipping Label...' : 'Download Shipping Label'}</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Financial Breakdown */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">

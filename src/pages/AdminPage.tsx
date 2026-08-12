@@ -23,6 +23,9 @@ import {
   Search,
   Filter,
   ShieldAlert,
+  FileText,
+  Download,
+  Printer,
   ArrowRight,
   LogOut,
   Leaf,
@@ -88,6 +91,56 @@ export const AdminPage: React.FC = () => {
   const [newProdDesc, setNewProdDesc] = useState('');
   const [newProdImage, setNewProdImage] = useState('');
   const [formMsg, setFormMsg] = useState<string | null>(null);
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+  const [isDownloadingLabel, setIsDownloadingLabel] = useState(false);
+
+  const handleDownloadInvoice = async (ordNum: string) => {
+    try {
+      setIsDownloadingInvoice(true);
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`https://sheeneeka-nursery-api.onrender.com/api/admin/orders/${ordNum}/invoice`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to generate invoice PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Sheeneeka-Nursery-Invoice-${ordNum}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err: any) {
+      alert('Unable to generate invoice. Please try again.');
+    } finally {
+      setIsDownloadingInvoice(false);
+    }
+  };
+
+  const handleDownloadShippingLabel = async (ordNum: string) => {
+    try {
+      setIsDownloadingLabel(true);
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`https://sheeneeka-nursery-api.onrender.com/api/admin/orders/${ordNum}/shipping-label`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to generate shipping label PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Sheeneeka-Nursery-Shipping-Label-${ordNum}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err: any) {
+      alert('Unable to generate shipping label. Please try again.');
+    } finally {
+      setIsDownloadingLabel(false);
+    }
+  };
 
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
@@ -1042,8 +1095,42 @@ export const AdminPage: React.FC = () => {
               ))}
             </div>
 
+            {/* PDF INVOICE & SHIPPING LABEL ACTIONS */}
+            {selectedOrder.status !== 'PENDING' && selectedOrder.status !== 'CANCELLED' && (
+              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-900/15 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#0f2d21] flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-[#386641]" />
+                    <span>Order Documents</span>
+                  </span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+                    ✓ Order Confirmed
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    onClick={() => handleDownloadInvoice(selectedOrder.orderNumber)}
+                    disabled={isDownloadingInvoice}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#0f2d21] hover:bg-[#1a4433] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>{isDownloadingInvoice ? 'Generating Invoice...' : 'Download Invoice PDF'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleDownloadShippingLabel(selectedOrder.orderNumber)}
+                    disabled={isDownloadingLabel}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>{isDownloadingLabel ? 'Generating Label...' : 'Download Shipping Label'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Total */}
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-sm">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-100 border border-slate-200 text-sm">
               <span className="font-bold text-[#0f2d21]">Total Order Value:</span>
               <span className="font-cinzel font-bold text-xl text-[#386641]">₹{selectedOrder.total}</span>
             </div>

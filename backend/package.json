@@ -27,6 +27,7 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.3",
+    "pdfkit": "^0.19.1",
     "razorpay": "^2.9.8",
     "winston": "^3.17.0",
     "zod": "^3.24.2"
@@ -37,6 +38,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
+    "@types/pdfkit": "^0.17.6",
     "prisma": "^5.22.0",
     "puppeteer-core": "^25.6.0",
     "tsx": "^4.19.3",
