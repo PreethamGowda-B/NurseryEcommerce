@@ -31,10 +31,10 @@ async function runFullAdminOpsE2E() {
     // 2. Submit Credentials
     console.log('2️⃣ Entering Super Admin Credentials...');
     const emailInp = await page.$('input[type="email"]');
-    if (emailInp) await emailInp.type('admin@sheeneekanursery.in');
+    if (emailInp) await emailInp.type('admin@shreeneekanursery.in');
 
     const passInp = await page.$('input[type="password"]');
-    if (passInp) await passInp.type('Admin@Sheeneeka2026!');
+    if (passInp) await passInp.type('admin@shreeneekanursery');
 
     const submitBtn = await page.$('button[type="submit"]');
     if (submitBtn) await submitBtn.click();

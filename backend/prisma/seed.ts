@@ -10,15 +10,15 @@ async function main() {
   console.log('🌱 Starting database seed...');
 
   // 1. Seed Admin User
-  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@sheeneekanursery.in';
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@Sheeneeka2026!';
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@shreeneekanursery.in';
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin@shreeneekanursery';
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
     update: { passwordHash, role: 'ADMIN' },
     create: {
-      name: 'Sheeneeka Admin',
+      name: 'Shreeneeka Admin',
       email: adminEmail,
       phone: '+91 81231 91863',
       passwordHash,

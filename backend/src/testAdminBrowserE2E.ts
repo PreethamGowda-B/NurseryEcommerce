@@ -31,10 +31,10 @@ async function runAdminBrowserE2E() {
     // 2. Fill Admin Credentials
     console.log('2️⃣ Typing Super Admin Credentials...');
     const emailInp = await page.$('input[type="email"]');
-    if (emailInp) await emailInp.type('admin@sheeneekanursery.in');
+    if (emailInp) await emailInp.type('admin@shreeneekanursery.in');
 
     const passInp = await page.$('input[type="password"]');
-    if (passInp) await passInp.type('Admin@Sheeneeka2026!');
+    if (passInp) await passInp.type('admin@shreeneekanursery');
 
     const screenshotAdmin1 = path.join(ARTIFACTS_DIR, 'admin_01_login_filled.png');
     await page.screenshot({ path: screenshotAdmin1 });
