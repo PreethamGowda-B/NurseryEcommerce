@@ -74,6 +74,7 @@ export const AdminPage: React.FC = () => {
   const [productSearch, setProductSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [updatingOrderNumber, setUpdatingOrderNumber] = useState<string | null>(null);
 
   // Modal States
   const [showAddProductModal, setShowAddProductModal] = useState(false);
@@ -161,6 +162,7 @@ export const AdminPage: React.FC = () => {
   // Order Status Update Mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderNumber, status }: { orderNumber: string; status: string }) => {
+      setUpdatingOrderNumber(orderNumber);
       const res = await api.patch(`/admin/orders/${orderNumber}/status`, {
         status,
         note: `Status updated to ${status} by super admin`,
@@ -173,6 +175,9 @@ export const AdminPage: React.FC = () => {
       if (selectedOrder) {
         refetchSingleOrder(selectedOrder.orderNumber);
       }
+    },
+    onSettled: () => {
+      setUpdatingOrderNumber(null);
     },
   });
 
@@ -731,31 +736,31 @@ export const AdminPage: React.FC = () => {
                       <span className="text-xs font-semibold text-slate-700">Fulfillment Status Action:</span>
                       {ord.status === 'PENDING' && (
                         <button
-                          disabled={updateStatusMutation.isPending}
+                          disabled={!!updatingOrderNumber}
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'CONFIRMED' })}
                           className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
                         >
-                          {updateStatusMutation.isPending ? 'Updating...' : 'Confirm Order'}
+                          {updatingOrderNumber === ord.orderNumber ? 'Updating...' : 'Confirm Order'}
                         </button>
                       )}
 
                       {ord.status === 'CONFIRMED' && (
                         <button
-                          disabled={updateStatusMutation.isPending}
+                          disabled={!!updatingOrderNumber}
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'SHIPPED' })}
                           className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
                         >
-                          {updateStatusMutation.isPending ? 'Updating...' : 'Dispatch / Ship Order'}
+                          {updatingOrderNumber === ord.orderNumber ? 'Dispatching...' : 'Dispatch / Ship Order'}
                         </button>
                       )}
 
                       {ord.status === 'SHIPPED' && (
                         <button
-                          disabled={updateStatusMutation.isPending}
+                          disabled={!!updatingOrderNumber}
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'DELIVERED' })}
                           className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
                         >
-                          {updateStatusMutation.isPending ? 'Updating...' : 'Mark Delivered'}
+                          {updatingOrderNumber === ord.orderNumber ? 'Updating...' : 'Mark Delivered'}
                         </button>
                       )}
                     </div>

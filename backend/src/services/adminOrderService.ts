@@ -19,10 +19,10 @@ export class AdminOrderService {
    * Controlled state machine transitions dictionary
    */
   private static VALID_TRANSITIONS: Record<string, string[]> = {
-    PENDING: ['CONFIRMED', 'CANCELLED'],
-    CONFIRMED: ['PROCESSING', 'CANCELLED'],
-    PROCESSING: ['SHIPPED', 'CANCELLED'],
-    SHIPPED: ['OUT_FOR_DELIVERY'],
+    PENDING: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'CANCELLED'],
+    CONFIRMED: ['PROCESSING', 'SHIPPED', 'CANCELLED'],
+    PROCESSING: ['SHIPPED', 'OUT_FOR_DELIVERY', 'CANCELLED'],
+    SHIPPED: ['OUT_FOR_DELIVERY', 'DELIVERED'],
     OUT_FOR_DELIVERY: ['DELIVERED'],
     DELIVERED: [], // Terminal state - immutable
     CANCELLED: [], // Terminal state - immutable
