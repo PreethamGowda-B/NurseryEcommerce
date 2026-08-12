@@ -303,22 +303,44 @@ export const AdminPage: React.FC = () => {
     } catch {}
   };
 
+  const [successBanner, setSuccessBanner] = useState<string | null>(null);
+
   // Create Product Mutation
   const createProductMutation = useMutation({
     mutationFn: async (payload: any) => {
       const res = await api.post('/admin/products', payload);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       queryClient.invalidateQueries({ queryKey: ['adminStats'] });
       setShowAddProductModal(false);
+      const prodName = data?.data?.name || newProdName || 'Plant Specimen';
+      setSuccessBanner(`🎉 Successfully uploaded "${prodName}" to your store website!`);
+      setTimeout(() => setSuccessBanner(null), 6000);
       setNewProdName('');
       setNewProdPrice('');
       setNewProdSalePrice('');
       setNewProdDesc('');
       setNewProdImage('');
       setImagePreview(null);
+    },
+    onError: (err: any) => {
+      setFormMsg(err?.response?.data?.message || err.message || 'Failed to upload product specimen.');
+    },
+  });
+
+  // Delete Product Mutation
+  const deleteProductMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const res = await api.delete(`/admin/products/${productId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['adminStats'] });
+      setSuccessBanner('🗑️ Product specimen removed successfully.');
+      setTimeout(() => setSuccessBanner(null), 5000);
     },
   });
 
@@ -486,6 +508,21 @@ export const AdminPage: React.FC = () => {
 
       {/* SUPER ADMIN MAIN CONTENT */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* SUCCESS NOTIFICATION TOAST BANNER */}
+        {successBanner && (
+          <div className="p-4 rounded-2xl bg-emerald-800 text-white flex items-center justify-between shadow-natural-lg animate-bounce transition-all">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-300 flex-shrink-0" />
+              <span className="font-semibold text-xs sm:text-sm">{successBanner}</span>
+            </div>
+            <button
+              onClick={() => setSuccessBanner(null)}
+              className="p-1 text-white/80 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         {/* SUPER ADMIN HEADER CARD */}
         <div className="bg-white border border-emerald-900/10 rounded-3xl p-6 sm:p-8 shadow-natural flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -1004,13 +1041,27 @@ export const AdminPage: React.FC = () => {
                       </button>
                     </div>
 
-                    <button
-                      onClick={() => togglePublishMutation.mutate({ productId: p.id, published: !p.published })}
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-100 text-[#386641] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      {p.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      <span>{p.published ? 'Unpublish' : 'Publish'}</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => togglePublishMutation.mutate({ productId: p.id, published: !p.published })}
+                        className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-100 text-[#386641] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        {p.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        <span>{p.published ? 'Unpublish' : 'Publish'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Are you sure you want to delete "${p.name}"?`)) {
+                            deleteProductMutation.mutate(p.id);
+                          }
+                        }}
+                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
+                        title="Delete Product"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

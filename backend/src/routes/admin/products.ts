@@ -382,7 +382,7 @@ router.patch(
  * DELETE /api/admin/products/:id
  * Delete or archive product safely without corrupting historical orders
  */
-router.get('/admin/products/:id', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.delete('/admin/products/:id', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const id = req.params.id as string;
 
