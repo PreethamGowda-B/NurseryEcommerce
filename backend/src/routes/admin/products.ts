@@ -133,21 +133,31 @@ router.post(
       let targetCategoryId = categoryId;
       const categoryExists = await prisma.category.findUnique({ where: { id: categoryId } });
       if (!categoryExists) {
-        const categoryBySlug = await prisma.category.findFirst({
-          where: { OR: [{ id: categoryId }, { slug: categoryId }] },
+        const cleanSlug = String(categoryId || '').replace(/^cat-/, '').toLowerCase();
+        const matchedCategory = await prisma.category.findFirst({
+          where: {
+            OR: [
+              { id: categoryId },
+              { slug: categoryId },
+              { slug: cleanSlug },
+              { slug: { contains: cleanSlug } },
+              { name: { contains: cleanSlug, mode: 'insensitive' } },
+            ],
+          },
         });
-        if (categoryBySlug) {
-          targetCategoryId = categoryBySlug.id;
+
+        if (matchedCategory) {
+          targetCategoryId = matchedCategory.id;
         } else {
           const firstCategory = await prisma.category.findFirst();
           if (firstCategory) {
             targetCategoryId = firstCategory.id;
           } else {
-            // Auto-create category on the fly so foreign key constraint NEVER fails
+            // Auto-create with guaranteed unique slug
             const newCat = await prisma.category.create({
               data: {
                 name: 'Indoor Plants',
-                slug: 'indoor-plants',
+                slug: `indoor-plants-${Date.now()}`,
               },
             });
             targetCategoryId = newCat.id;
@@ -205,16 +215,16 @@ router.post(
         include: { category: true, images: true },
       });
 
-      // Audit log
+      // Non-blocking Audit log
       if (req.user) {
-        await AuditService.log({
+        AuditService.log({
           adminId: req.user.id,
           action: 'PRODUCT_CREATED',
           entity: 'Product',
           entityId: product.id,
           metadata: { name: product.name, sku: product.sku, price: product.price, published: product.published },
           ipAddress: req.ip,
-        });
+        }).catch((err) => console.error('AuditLog error:', err));
       }
 
       sendSuccess(res, fullProduct, 'Product created successfully', 201);
