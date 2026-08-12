@@ -167,7 +167,7 @@ export const PlantCatalogSection: React.FC = () => {
                   <img
                     src={plant.image}
                     alt={plant.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700"
                     loading="lazy"
                   />
                   {plant.isPopular && (

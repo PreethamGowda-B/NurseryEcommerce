@@ -981,7 +981,7 @@ export const AdminPage: React.FC = () => {
                       <img
                         src={p.images?.[0]?.url || 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80'}
                         alt={p.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                         <span
@@ -1446,10 +1446,9 @@ export const AdminPage: React.FC = () => {
                 </label>
 
                 {/* Show uploaded URL or allow manual URL fallback */}
-                {newProdImage && (
+                {newProdImage ? (
                   <p className="text-[10px] text-emerald-700 mt-1 font-medium truncate">Uploaded: {newProdImage}</p>
-                )}
-                {!newProdImage && (
+                ) : (
                   <input
                     type="url"
                     placeholder="Or paste image URL directly..."
@@ -1458,6 +1457,17 @@ export const AdminPage: React.FC = () => {
                     className="w-full mt-2 px-3.5 py-2 bg-slate-50 border border-emerald-900/15 rounded-xl text-xs focus:outline-none focus:border-[#386641]"
                   />
                 )}
+                {/* Image Layout & Size Guide Box */}
+                <div className="mt-2.5 p-3 rounded-xl bg-emerald-50/60 border border-emerald-900/10 text-[11px] text-[#0f2d21] space-y-1">
+                  <span className="font-bold flex items-center gap-1 text-[#386641]">
+                    <span>📐 Recommended Image Specs for Store Display:</span>
+                  </span>
+                  <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
+                    <li><strong>Best Aspect Ratio:</strong> 1:1 (Square) or 4:5 (Vertical)</li>
+                    <li><strong>Ideal Resolution:</strong> 1000 × 1000 px or 800 × 1000 px</li>
+                    <li><strong>Plant Photo Tip:</strong> Leave empty padding around top leaves so no branches get cut off!</li>
+                  </ul>
+                </div>
               </div>
 
               <div>
