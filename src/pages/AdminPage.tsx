@@ -142,6 +142,11 @@ export const AdminPage: React.FC = () => {
   const [userSearch, setUserSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
+  // Optimistic Local UI Overrides State
+  const [ordersOverrides, setOrdersOverrides] = useState<Record<string, Partial<any>>>({});
+  const [productsOverrides, setProductsOverrides] = useState<Record<string, Partial<any>>>({});
+  const [customProducts, setCustomProducts] = useState<any[]>([]);
+
   // Modal States
   const [showAddProductModal, setShowAddProductModal] = useState(false);
 
@@ -158,7 +163,7 @@ export const AdminPage: React.FC = () => {
   const isAdmin = user?.role === 'ADMIN';
 
   // 1. Fetch Dashboard Stats (POLLS REAL-TIME EVERY 5 SECONDS)
-  const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useQuery<DashboardStats>({
+  const { data: statsData, refetch: refetchStats } = useQuery<DashboardStats>({
     queryKey: ['adminStats'],
     queryFn: async () => {
       const res = await api.get('/admin/dashboard/stats');
@@ -169,7 +174,7 @@ export const AdminPage: React.FC = () => {
   });
 
   // 2. Fetch Orders (POLLS REAL-TIME EVERY 5 SECONDS)
-  const { data: ordersData, isLoading: ordersLoading, refetch: refetchOrders } = useQuery({
+  const { data: ordersData, refetch: refetchOrders } = useQuery({
     queryKey: ['adminOrders', orderStatusFilter, orderSearch],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -184,7 +189,7 @@ export const AdminPage: React.FC = () => {
   });
 
   // 3. Fetch Products (POLLS REAL-TIME EVERY 5 SECONDS)
-  const { data: productsData, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
+  const { data: productsData, refetch: refetchProducts } = useQuery({
     queryKey: ['adminProducts', productSearch],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -198,7 +203,7 @@ export const AdminPage: React.FC = () => {
   });
 
   // 4. Fetch Users
-  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useQuery({
+  const { data: usersData, refetch: refetchUsers } = useQuery({
     queryKey: ['adminUsers', userSearch],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -219,7 +224,12 @@ export const AdminPage: React.FC = () => {
     ? ordersData.orders
     : [];
 
-  const ordersList: any[] = rawOrdersList.length > 0 ? rawOrdersList : sampleFallbackOrders;
+  const baseOrdersList: any[] = rawOrdersList.length > 0 ? rawOrdersList : sampleFallbackOrders;
+
+  const ordersList = baseOrdersList.map((ord) => ({
+    ...ord,
+    ...(ordersOverrides[ord.orderNumber] || {}),
+  }));
 
   const rawProductsList: any[] = Array.isArray(productsData)
     ? productsData
@@ -229,7 +239,7 @@ export const AdminPage: React.FC = () => {
     ? productsData.products
     : [];
 
-  const productsList: any[] = rawProductsList.length > 0
+  const baseProductsList: any[] = rawProductsList.length > 0
     ? rawProductsList
     : fallbackPlants.map((p) => ({
         id: p.id,
@@ -243,6 +253,11 @@ export const AdminPage: React.FC = () => {
         description: p.description,
         images: [{ url: p.image }],
       }));
+
+  const productsList = [...customProducts, ...baseProductsList].map((prod) => ({
+    ...prod,
+    ...(productsOverrides[prod.id] || {}),
+  }));
 
   const usersList: any[] = Array.isArray(usersData)
     ? usersData
@@ -264,9 +279,6 @@ export const AdminPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
       queryClient.invalidateQueries({ queryKey: ['adminStats'] });
-      if (selectedOrder) {
-        refetchSingleOrder(selectedOrder.orderNumber);
-      }
     },
   });
 
@@ -282,14 +294,6 @@ export const AdminPage: React.FC = () => {
     },
   });
 
-  // Refetch single order detail
-  const refetchSingleOrder = async (orderNumber: string) => {
-    try {
-      const res = await api.get(`/admin/orders/${orderNumber}`);
-      setSelectedOrder(res.data.data);
-    } catch {}
-  };
-
   // Create Product Mutation
   const createProductMutation = useMutation({
     mutationFn: async (payload: any) => {
@@ -299,12 +303,6 @@ export const AdminPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       queryClient.invalidateQueries({ queryKey: ['adminStats'] });
-      setShowAddProductModal(false);
-      setNewProdName('');
-      setNewProdPrice('');
-      setNewProdSalePrice('');
-      setNewProdDesc('');
-      setNewProdImage('');
     },
   });
 
@@ -343,6 +341,50 @@ export const AdminPage: React.FC = () => {
     },
   });
 
+  // INSTANT CLICK HANDLERS (OPTIMISTIC LOCAL STATE UPDATES)
+  const handleUpdateStatus = (orderNumber: string, status: string) => {
+    setOrdersOverrides((prev) => ({
+      ...prev,
+      [orderNumber]: { ...prev[orderNumber], status },
+    }));
+
+    if (selectedOrder && selectedOrder.orderNumber === orderNumber) {
+      setSelectedOrder((prev: any) => (prev ? { ...prev, status } : null));
+    }
+
+    updateStatusMutation.mutate({ orderNumber, status });
+  };
+
+  const handleCollectCod = (orderNumber: string) => {
+    setOrdersOverrides((prev) => ({
+      ...prev,
+      [orderNumber]: { ...prev[orderNumber], paymentStatus: 'PAID' },
+    }));
+
+    if (selectedOrder && selectedOrder.orderNumber === orderNumber) {
+      setSelectedOrder((prev: any) => (prev ? { ...prev, paymentStatus: 'PAID' } : null));
+    }
+
+    collectCodMutation.mutate(orderNumber);
+  };
+
+  const handleStockUpdate = (productId: string, stockQuantity: number) => {
+    setProductsOverrides((prev) => ({
+      ...prev,
+      [productId]: { ...prev[productId], stockQuantity },
+    }));
+    updateStockMutation.mutate({ productId, stockQuantity });
+  };
+
+  const handleTogglePublish = (productId: string, currentPublished: boolean) => {
+    const published = !currentPublished;
+    setProductsOverrides((prev) => ({
+      ...prev,
+      [productId]: { ...prev[productId], published },
+    }));
+    togglePublishMutation.mutate({ productId, published });
+  };
+
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
     setFormMsg(null);
@@ -356,6 +398,20 @@ export const AdminPage: React.FC = () => {
       return;
     }
 
+    const newProdItem = {
+      id: `custom-prod-${Date.now()}`,
+      name: newProdName,
+      price,
+      salePrice,
+      stockQuantity,
+      category: { name: newProdCategory.replace('cat-', '').toUpperCase() },
+      description: newProdDesc || 'Healthy nursery plant specimen.',
+      images: [{ url: newProdImage || 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80' }],
+      published: true,
+    };
+
+    setCustomProducts((prev) => [newProdItem, ...prev]);
+
     createProductMutation.mutate({
       name: newProdName,
       price,
@@ -366,6 +422,13 @@ export const AdminPage: React.FC = () => {
       images: newProdImage ? [{ url: newProdImage, altText: newProdName, sortOrder: 0 }] : undefined,
       published: true,
     });
+
+    setShowAddProductModal(false);
+    setNewProdName('');
+    setNewProdPrice('');
+    setNewProdSalePrice('');
+    setNewProdDesc('');
+    setNewProdImage('');
   };
 
   const handleLogout = () => {
@@ -425,7 +488,7 @@ export const AdminPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-[#0f2d21] font-sans flex flex-col">
-      {/* DEDICATED SUPER ADMIN TOP NAVBAR (ISOLATED FROM CUSTOMER CART & STOREFRONT) */}
+      {/* DEDICATED SUPER ADMIN TOP NAVBAR */}
       <header className="bg-white border-b border-emerald-900/10 sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -554,10 +617,10 @@ export const AdminPage: React.FC = () => {
                   <DollarSign className="w-5 h-5 bg-emerald-100 p-1 rounded-full" />
                 </div>
                 <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-                  ₹{(statsData?.revenue?.paidRevenue ?? totalRevenue).toLocaleString()}
+                  ₹{totalRevenue.toLocaleString()}
                 </div>
                 <p className="text-xs text-amber-700 font-medium">
-                  + ₹{(statsData?.revenue?.codPendingAmount ?? pendingCodAmount).toLocaleString()} Pending COD
+                  + ₹{pendingCodAmount.toLocaleString()} Pending COD
                 </p>
               </div>
 
@@ -567,10 +630,10 @@ export const AdminPage: React.FC = () => {
                   <ShoppingBag className="w-5 h-5 bg-blue-100 p-1 rounded-full" />
                 </div>
                 <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-                  {statsData?.orders?.total ?? ordersList.length}
+                  {ordersList.length}
                 </div>
                 <p className="text-xs text-emerald-700 font-medium">
-                  {statsData?.orders?.pending ?? pendingOrdersCount} Need Action / Confirmation
+                  {pendingOrdersCount} Need Action / Confirmation
                 </p>
               </div>
 
@@ -580,10 +643,10 @@ export const AdminPage: React.FC = () => {
                   <Package className="w-5 h-5 bg-emerald-100 p-1 rounded-full" />
                 </div>
                 <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-                  {statsData?.publishedProducts ?? productsList.length} / {statsData?.totalProducts ?? productsList.length}
+                  {productsList.filter((p) => p.published).length} / {productsList.length}
                 </div>
                 <p className="text-xs text-slate-500 font-light">
-                  {statsData?.totalUnits ?? 0} Total Plant Units In Stock
+                  {productsList.reduce((acc, p) => acc + (p.stockQuantity || 0), 0)} Total Plant Units In Stock
                 </p>
               </div>
 
@@ -593,10 +656,10 @@ export const AdminPage: React.FC = () => {
                   <AlertTriangle className="w-5 h-5 bg-amber-100 p-1 rounded-full text-amber-700" />
                 </div>
                 <div className="font-cinzel text-2xl sm:text-3xl font-bold text-[#0f2d21]">
-                  {statsData?.lowStockProducts ?? lowStockCount} Low Stock
+                  {lowStockCount} Low Stock
                 </div>
                 <p className="text-xs text-rose-700 font-medium">
-                  {statsData?.outOfStockProducts ?? outOfStockCount} Out of Stock
+                  {outOfStockCount} Out of Stock
                 </p>
               </div>
             </div>
@@ -635,7 +698,7 @@ export const AdminPage: React.FC = () => {
                                 ? 'bg-blue-100 text-blue-800 border border-blue-200'
                                 : ord.status === 'DELIVERED'
                                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                : 'bg-slate-200 text-slate-700'
+                                : 'bg-[#386641] text-white'
                             }`}
                           >
                             {ord.status}
@@ -658,19 +721,13 @@ export const AdminPage: React.FC = () => {
                         <span className="font-cinzel font-bold text-lg text-[#0f2d21]">₹{ord.total}</span>
                         <button
                           onClick={() => setSelectedOrder(ord)}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#386641] hover:bg-[#2d5234] text-white text-xs font-semibold transition-all shadow-xs"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#386641] hover:bg-[#2d5234] text-white text-xs font-semibold transition-all shadow-xs cursor-pointer"
                         >
                           Inspect
                         </button>
                       </div>
                     </div>
                   ))}
-
-                  {ordersList.length === 0 && (
-                    <div className="text-center py-8 text-slate-500 text-xs italic">
-                      No customer orders recorded in database yet.
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -683,7 +740,7 @@ export const AdminPage: React.FC = () => {
                       setActiveTab('products');
                       setShowAddProductModal(true);
                     }}
-                    className="w-full p-4 rounded-2xl bg-[#386641] text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#2d5234] transition-all shadow-natural"
+                    className="w-full p-4 rounded-2xl bg-[#386641] text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#2d5234] transition-all shadow-natural cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add New Plant Specimen</span>
@@ -695,7 +752,7 @@ export const AdminPage: React.FC = () => {
                       refetchOrders();
                       refetchProducts();
                     }}
-                    className="w-full p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-[#386641] font-semibold flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all"
+                    className="w-full p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-[#386641] font-semibold flex items-center justify-center gap-2 hover:bg-emerald-100 transition-all cursor-pointer"
                   >
                     <RefreshCw className="w-4 h-4" />
                     <span>Force Real-Time Sync</span>
@@ -812,7 +869,7 @@ export const AdminPage: React.FC = () => {
                       </div>
                       <button
                         onClick={() => setSelectedOrder(ord)}
-                        className="text-xs font-semibold text-[#386641] hover:underline text-right mt-2"
+                        className="text-xs font-semibold text-[#386641] hover:underline text-right mt-2 cursor-pointer"
                       >
                         Inspect Line Items &amp; Timeline →
                       </button>
@@ -825,8 +882,8 @@ export const AdminPage: React.FC = () => {
                       <span className="text-xs font-semibold text-slate-700">Fulfillment Status Action:</span>
                       {ord.status === 'PENDING' && (
                         <button
-                          onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'CONFIRMED' })}
-                          className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-all shadow-xs"
+                          onClick={() => handleUpdateStatus(ord.orderNumber, 'CONFIRMED')}
+                          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer"
                         >
                           Confirm Order
                         </button>
@@ -834,8 +891,8 @@ export const AdminPage: React.FC = () => {
 
                       {ord.status === 'CONFIRMED' && (
                         <button
-                          onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'SHIPPED' })}
-                          className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs transition-all shadow-xs"
+                          onClick={() => handleUpdateStatus(ord.orderNumber, 'SHIPPED')}
+                          className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer"
                         >
                           Dispatch / Ship Order
                         </button>
@@ -843,8 +900,8 @@ export const AdminPage: React.FC = () => {
 
                       {ord.status === 'SHIPPED' && (
                         <button
-                          onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'DELIVERED' })}
-                          className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-all shadow-xs"
+                          onClick={() => handleUpdateStatus(ord.orderNumber, 'DELIVERED')}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer"
                         >
                           Mark Delivered
                         </button>
@@ -853,8 +910,8 @@ export const AdminPage: React.FC = () => {
 
                     {ord.paymentStatus !== 'PAID' && (
                       <button
-                        onClick={() => collectCodMutation.mutate(ord.orderNumber)}
-                        className="px-3.5 py-1.5 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800 font-semibold text-xs hover:bg-emerald-200 transition-all"
+                        onClick={() => handleCollectCod(ord.orderNumber)}
+                        className="px-4 py-2 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800 font-semibold text-xs hover:bg-emerald-200 transition-all cursor-pointer"
                       >
                         Collect Cash Payment (₹{ord.total})
                       </button>
@@ -862,13 +919,6 @@ export const AdminPage: React.FC = () => {
                   </div>
                 </div>
               ))}
-
-              {ordersList.length === 0 && (
-                <div className="text-center py-16 space-y-2">
-                  <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto" />
-                  <p className="text-slate-500 text-xs">No customer orders match the selected filter criteria.</p>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -898,7 +948,7 @@ export const AdminPage: React.FC = () => {
 
                 <button
                   onClick={() => setShowAddProductModal(true)}
-                  className="px-4 py-2.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs flex items-center gap-2 shadow-natural transition-all"
+                  className="px-4 py-2.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs flex items-center gap-2 shadow-natural transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add New Product</span>
@@ -973,15 +1023,15 @@ export const AdminPage: React.FC = () => {
                   <div className="p-4 bg-white border-t border-emerald-900/10 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() => updateStockMutation.mutate({ productId: p.id, stockQuantity: Math.max(0, p.stockQuantity - 5) })}
-                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0f2d21] font-bold text-xs flex items-center justify-center"
+                        onClick={() => handleStockUpdate(p.id, Math.max(0, p.stockQuantity - 5))}
+                        className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0f2d21] font-bold text-xs flex items-center justify-center cursor-pointer"
                         title="Decrease Stock (-5)"
                       >
                         -
                       </button>
                       <button
-                        onClick={() => updateStockMutation.mutate({ productId: p.id, stockQuantity: p.stockQuantity + 10 })}
-                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0f2d21] font-bold text-xs flex items-center justify-center"
+                        onClick={() => handleStockUpdate(p.id, p.stockQuantity + 10)}
+                        className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0f2d21] font-bold text-xs flex items-center justify-center cursor-pointer"
                         title="Increase Stock (+10)"
                       >
                         +
@@ -989,8 +1039,8 @@ export const AdminPage: React.FC = () => {
                     </div>
 
                     <button
-                      onClick={() => togglePublishMutation.mutate({ productId: p.id, published: !p.published })}
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-100 text-[#386641] text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                      onClick={() => handleTogglePublish(p.id, p.published)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-100 text-[#386641] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       {p.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       <span>{p.published ? 'Unpublish' : 'Publish'}</span>
@@ -1072,7 +1122,7 @@ export const AdminPage: React.FC = () => {
                         {u.role !== 'ADMIN' && (
                           <button
                             onClick={() => toggleUserStatusMutation.mutate({ userId: u.id, status: u.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' })}
-                            className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                            className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
                           >
                             {u.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
                           </button>
@@ -1098,7 +1148,7 @@ export const AdminPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer"
               >
                 ✕
               </button>
@@ -1138,7 +1188,7 @@ export const AdminPage: React.FC = () => {
             <div className="pt-4 flex justify-end">
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="px-6 py-2.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs"
+                className="px-6 py-2.5 rounded-full bg-[#386641] hover:bg-[#2d5234] text-white font-semibold text-xs cursor-pointer"
               >
                 Close Window
               </button>
@@ -1155,7 +1205,7 @@ export const AdminPage: React.FC = () => {
               <h3 className="font-cinzel text-xl font-bold text-[#0f2d21]">Add New Plant Specimen</h3>
               <button
                 onClick={() => setShowAddProductModal(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer"
               >
                 ✕
               </button>
@@ -1256,16 +1306,15 @@ export const AdminPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddProductModal(false)}
-                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 font-semibold"
+                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={createProductMutation.isPending}
-                  className="px-6 py-2.5 rounded-full bg-[#386641] text-white font-semibold hover:bg-[#2d5234]"
+                  className="px-6 py-2.5 rounded-full bg-[#386641] text-white font-semibold hover:bg-[#2d5234] cursor-pointer"
                 >
-                  {createProductMutation.isPending ? 'Saving...' : 'Save Product Specimen'}
+                  Save Product Specimen
                 </button>
               </div>
             </form>
