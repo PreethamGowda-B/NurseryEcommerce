@@ -62,4 +62,34 @@ router.get(
   }
 );
 
+/**
+ * GET /api/orders/:orderNumber/invoice
+ * Customer PDF Invoice download with strict ownership verification
+ */
+router.get(
+  '/orders/:orderNumber/invoice',
+  validate(orderParamSchema),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.user!.id;
+      const orderNumber = req.params.orderNumber as string;
+
+      // Verify customer owns this order
+      const order = await OrderService.getCustomerOrder(userId, orderNumber);
+
+      const { PDFService } = await import('../services/pdfService.js');
+      const pdfBuffer = await PDFService.generateInvoicePDF(order as any);
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="Sheeneeka-Nursery-Invoice-${order.orderNumber}.pdf"`
+      );
+      res.send(pdfBuffer);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 export default router;
