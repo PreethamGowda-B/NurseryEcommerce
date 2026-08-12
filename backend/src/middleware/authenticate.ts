@@ -13,7 +13,7 @@ export async function authenticate(
       req.cookies?.token ||
       (req.headers.authorization?.startsWith('Bearer ')
         ? req.headers.authorization.split(' ')[1]
-        : null);
+        : (req.query?.token as string) || null);
 
     if (!token) {
       throw new UnauthorizedError('Authentication token missing');

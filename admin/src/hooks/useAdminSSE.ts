@@ -7,8 +7,11 @@ export function useAdminSSE(onNewOrder?: (orderData: any) => void) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+
     // Standard EventSource connection to authenticated Express SSE endpoint
-    const sseUrl = `${API_BASE_URL}/api/sse/admin`;
+    const sseUrl = `${API_BASE_URL}/api/sse/admin?token=${encodeURIComponent(token)}`;
     const eventSource = new EventSource(sseUrl, { withCredentials: true });
 
     eventSource.onopen = () => {

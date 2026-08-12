@@ -32,8 +32,8 @@ export class AdminOrderService {
    * Paginated order list with search, multi-filter & safety projection
    */
   static async listOrders(params: ListAdminOrdersParams) {
-    const page = params.page || 1;
-    const limit = params.limit || 20;
+    const page = typeof params.page === 'number' ? params.page : parseInt(params.page as any || '1', 10);
+    const limit = typeof params.limit === 'number' ? params.limit : parseInt(params.limit as any || '20', 10);
     const skip = (page - 1) * limit;
 
     const where: any = {};

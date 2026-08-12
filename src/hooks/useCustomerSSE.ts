@@ -7,8 +7,11 @@ export function useCustomerSSE(onStatusUpdate?: (data: any) => void) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+
     // Authenticated SSE stream for customer live order tracking
-    const sseUrl = `${API_BASE_URL}/api/sse/customer`;
+    const sseUrl = `${API_BASE_URL}/api/sse/customer?token=${encodeURIComponent(token)}`;
     const eventSource = new EventSource(sseUrl, { withCredentials: true });
 
     eventSource.onopen = () => {
