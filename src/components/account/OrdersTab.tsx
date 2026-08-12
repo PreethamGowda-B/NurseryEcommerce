@@ -22,76 +22,7 @@ export const OrdersTab: React.FC = () => {
     return <div className="p-8 text-center text-xs text-rose-500">Failed to load order history.</div>;
   }
 
-  const sampleFallbackOrders: CustomerOrder[] = [
-    {
-      id: 'ord-preethu-1',
-      orderNumber: 'SN-260811-6782',
-      userId: 'usr-preethu',
-      status: 'CONFIRMED',
-      paymentStatus: 'PENDING',
-      paymentMethod: 'COD',
-      subtotal: 449,
-      deliveryFee: 99,
-      total: 548,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      shippingAddress: {
-        fullName: 'Preetham Gowda B',
-        phone: '+91 9876543210',
-        addressLine1: 'Flat 302, Green Acres Apartment',
-        city: 'Bangalore',
-        state: 'Karnataka',
-        postalCode: '560001',
-        country: 'India',
-        label: 'HOME',
-      },
-      items: [
-        {
-          id: 'it-1',
-          productId: 'plant-snake',
-          productNameSnapshot: 'Snake Plant Laurentii',
-          priceSnapshot: 449,
-          quantity: 1,
-          subtotal: 449,
-        },
-      ],
-    },
-    {
-      id: 'ord-preethu-2',
-      orderNumber: 'SN-260811-1950',
-      userId: 'usr-preethu',
-      status: 'SHIPPED',
-      paymentStatus: 'PENDING',
-      paymentMethod: 'COD',
-      subtotal: 1200,
-      deliveryFee: 99,
-      total: 1299,
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
-      updatedAt: new Date().toISOString(),
-      shippingAddress: {
-        fullName: 'Preetham Gowda B',
-        phone: '+91 9876543210',
-        addressLine1: 'Flat 302, Green Acres Apartment',
-        city: 'Bangalore',
-        state: 'Karnataka',
-        postalCode: '560001',
-        country: 'India',
-        label: 'HOME',
-      },
-      items: [
-        {
-          id: 'it-2',
-          productId: 'pot-terracotta',
-          productNameSnapshot: 'Handcrafted Terracotta Pot Set',
-          priceSnapshot: 1200,
-          quantity: 1,
-          subtotal: 1200,
-        },
-      ],
-    },
-  ];
-
-  const displayOrders = orders && orders.length > 0 ? orders : sampleFallbackOrders;
+  const displayOrders = orders || [];
 
   const filteredOrders = displayOrders.filter(
     (o) =>
