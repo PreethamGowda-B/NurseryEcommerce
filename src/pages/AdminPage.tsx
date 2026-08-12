@@ -731,28 +731,31 @@ export const AdminPage: React.FC = () => {
                       <span className="text-xs font-semibold text-slate-700">Fulfillment Status Action:</span>
                       {ord.status === 'PENDING' && (
                         <button
+                          disabled={updateStatusMutation.isPending}
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'CONFIRMED' })}
-                          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
                         >
-                          Confirm Order
+                          {updateStatusMutation.isPending ? 'Updating...' : 'Confirm Order'}
                         </button>
                       )}
 
                       {ord.status === 'CONFIRMED' && (
                         <button
+                          disabled={updateStatusMutation.isPending}
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'SHIPPED' })}
-                          className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
                         >
-                          Dispatch / Ship Order
+                          {updateStatusMutation.isPending ? 'Updating...' : 'Dispatch / Ship Order'}
                         </button>
                       )}
 
                       {ord.status === 'SHIPPED' && (
                         <button
+                          disabled={updateStatusMutation.isPending}
                           onClick={() => updateStatusMutation.mutate({ orderNumber: ord.orderNumber, status: 'DELIVERED' })}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
                         >
-                          Mark Delivered
+                          {updateStatusMutation.isPending ? 'Updating...' : 'Mark Delivered'}
                         </button>
                       )}
                     </div>
