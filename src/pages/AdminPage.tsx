@@ -1061,14 +1061,15 @@ export const AdminPage: React.FC = () => {
 
                       <button
                         onClick={() => {
-                          if (window.confirm(`Are you sure you want to delete "${p.name}"?`)) {
+                          if (window.confirm(`Are you sure you want to permanently delete "${p.name}" from your store catalog?`)) {
                             deleteProductMutation.mutate(p.id);
                           }
                         }}
-                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600 transition-colors cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                         title="Delete Product"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </div>
