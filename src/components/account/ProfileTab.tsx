@@ -81,13 +81,10 @@ export const ProfileTab: React.FC = () => {
         <div>
           <label className="block font-semibold text-slate-700 mb-1">Email Address (Read-Only)</label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="email"
-              disabled
-              value={profile.email}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 cursor-not-allowed font-mono"
-            />
+            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
+            <div className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-700 font-mono font-semibold select-all flex items-center">
+              {profile.email}
+            </div>
           </div>
         </div>
 

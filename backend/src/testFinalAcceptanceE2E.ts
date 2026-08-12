@@ -4,7 +4,7 @@ import fs from 'fs';
 
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const CUSTOMER_URL = 'https://nursery-ecommerce.vercel.app';
-const ADMIN_URL = 'http://localhost:3001';
+const ADMIN_URL = 'https://nursery-ecommerce.vercel.app';
 
 async function runFinalAcceptanceTest() {
   console.log('🚀 STARTING COMPREHENSIVE FINAL ACCEPTANCE E2E TEST IN REAL CHROME');
@@ -24,7 +24,7 @@ async function runFinalAcceptanceTest() {
 
     // 1. Customer opens website
     console.log('1️⃣ Navigating to Customer Storefront...');
-    await page.goto(`${CUSTOMER_URL}/shop`, { waitUntil: 'networkidle2' });
+    await page.goto(`${CUSTOMER_URL}/shop`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await new Promise((r) => setTimeout(r, 2000));
 
     // 2. Add product to cart as guest
@@ -43,12 +43,12 @@ async function runFinalAcceptanceTest() {
 
     // 3. Open Cart Page
     console.log('3️⃣ Navigating to Cart Page...');
-    await page.goto(`${CUSTOMER_URL}/cart`, { waitUntil: 'networkidle2' });
+    await page.goto(`${CUSTOMER_URL}/cart`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await new Promise((r) => setTimeout(r, 1500));
 
     // 4. Click Proceed to Checkout -> Redirected to Register
     console.log('4️⃣ Clicking Proceed to Checkout...');
-    await page.goto(`${CUSTOMER_URL}/register?redirect=/checkout`, { waitUntil: 'networkidle2' });
+    await page.goto(`${CUSTOMER_URL}/register?redirect=/checkout`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await new Promise((r) => setTimeout(r, 1500));
 
     // 5. Register Customer Account
@@ -64,18 +64,18 @@ async function runFinalAcceptanceTest() {
 
     // 6. Guest Cart Merged -> Checkout Page
     console.log('6️⃣ Verifying Checkout Page post-registration...');
-    await page.goto(`${CUSTOMER_URL}/checkout`, { waitUntil: 'networkidle2' });
+    await page.goto(`${CUSTOMER_URL}/checkout`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await new Promise((r) => setTimeout(r, 2000));
 
     // 7. Open Account Orders Page
     console.log('7️⃣ Checking Account Orders Page...');
-    await page.goto(`${CUSTOMER_URL}/account/orders`, { waitUntil: 'networkidle2' });
+    await page.goto(`${CUSTOMER_URL}/account/orders`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await new Promise((r) => setTimeout(r, 2000));
 
     // 8. Open Standalone Admin SPA Page
     console.log('8️⃣ Opening Standalone Admin Portal...');
     const adminPage = await browser.newPage();
-    await adminPage.goto(`${ADMIN_URL}/login`, { waitUntil: 'networkidle2' });
+    await adminPage.goto(`${ADMIN_URL}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await new Promise((r) => setTimeout(r, 1500));
 
     console.log('9️⃣ Typing Admin Credentials in Standalone Admin Portal...');
